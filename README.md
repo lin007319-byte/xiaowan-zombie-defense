@@ -1,8 +1,14 @@
-# 小万大站僵尸 v2.0 · 无限防守版
+# 小万大站僵尸 v2.1 · 无限防守版
+
+## 🎮 手机和电脑直接开始游戏
+
+**[点击这里打开最新版游戏](https://lin007319-byte.github.io/xiaowan-zombie-defense/?v=2.1.0)**
+
+> `github.com/lin007319-byte/xiaowan-zombie-defense` 是源码仓库页面；上面的 `github.io` 地址才是游戏入口。
 
 原创浏览器植物融合塔防。无第三方运行依赖，使用 Canvas 2D 与 Web Audio；角色插画由 AI 辅助生成并经过透明化、图集化与游戏内适配。
 
-在线游玩：https://lin007319-byte.github.io/xiaowan-zombie-defense/
+在线游玩：https://lin007319-byte.github.io/xiaowan-zombie-defense/?v=2.1.0
 
 ## 运行
 
