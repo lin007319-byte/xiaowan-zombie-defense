@@ -1,0 +1,122 @@
+(function (root, factory) {
+  const api = factory();
+  if (typeof module !== "undefined" && module.exports) module.exports = api;
+  root.FusionCore = api;
+})(typeof globalThis !== "undefined" ? globalThis : this, function () {
+  "use strict";
+
+  const PLANTS = {
+    pea: { id: "pea", name: "豌豆射手", short: "豌豆", cost: 100, cooldown: 4, body: "shooter", gene: "shooter", hp: 340, damage: 26, interval: 1.25, color: "#78d85f" },
+    sun: { id: "sun", name: "向日葵", short: "向日葵", cost: 50, cooldown: 4, body: "producer", gene: "producer", hp: 340, interval: 7, color: "#ffd85f" },
+    nut: { id: "nut", name: "坚果墙", short: "坚果", cost: 50, cooldown: 8, body: "guard", gene: "guard", hp: 3000, color: "#bd824b" },
+    frost: { id: "frost", name: "寒冰豌豆", short: "寒冰", cost: 150, cooldown: 6, body: "shooter", gene: "frost", hp: 340, damage: 20, interval: 1.5, color: "#70d7e8" },
+    cherry: { id: "cherry", name: "樱桃炸弹", short: "樱桃", cost: 150, cooldown: 12, body: "burst", gene: "burst", hp: 340, damage: 900, interval: .8, color: "#ef5c61" },
+    corn: { id: "corn", name: "玉米投手", short: "玉米", cost: 125, cooldown: 5, body: "shooter", gene: "stun", hp: 360, damage: 24, interval: 1.55, color: "#f2c94c" },
+    pepper: { id: "pepper", name: "火爆辣椒", short: "辣椒", cost: 175, cooldown: 14, body: "burst", gene: "fire", hp: 360, damage: 620, interval: .8, color: "#ff704d" },
+    mushroom: { id: "mushroom", name: "星光菇", short: "星菇", cost: 75, cooldown: 4, body: "shooter", gene: "pierce", hp: 280, damage: 13, interval: .85, color: "#b98cff" },
+    cactus: { id: "cactus", name: "尖刺仙人掌", short: "仙人掌", cost: 100, cooldown: 5, body: "shooter", gene: "crit", hp: 420, damage: 28, interval: 1.5, color: "#59bd74" },
+    garlic: { id: "garlic", name: "迷魂大蒜", short: "大蒜", cost: 50, cooldown: 7, body: "guard", gene: "weaken", hp: 1900, color: "#ede2bd" },
+    coffee: { id: "coffee", name: "醒神咖啡豆", short: "咖啡", cost: 75, cooldown: 5, body: "producer", gene: "haste", hp: 320, interval: 6.5, color: "#9a633f" },
+    melon: { id: "melon", name: "西瓜投手", short: "西瓜", cost: 175, cooldown: 7, body: "shooter", gene: "splash", hp: 400, damage: 44, interval: 2.1, color: "#67bf66" },
+    bamboo: { id: "bamboo", name: "竹筒连弩", short: "竹弩", cost: 150, cooldown: 6, body: "shooter", gene: "multishot", hp: 370, damage: 18, interval: 1.2, color: "#77c65d" },
+    lotus: { id: "lotus", name: "治愈莲花", short: "莲花", cost: 100, cooldown: 6, body: "producer", gene: "heal", hp: 360, interval: 8, color: "#f39ac2" },
+    pumpkin: { id: "pumpkin", name: "南瓜堡垒", short: "南瓜", cost: 125, cooldown: 9, body: "guard", gene: "armor", hp: 3800, color: "#e8923b" }
+  };
+
+  const RECIPES = {
+    "sun>pea": { name: "阳光豌豆", note: "阳光弹命中后有概率长出小阳光", tone: "gold" },
+    "pea>sun": { name: "豆荚花盘", note: "每次产阳光时向危险路线发射种子", tone: "gold" },
+    "nut>pea": { name: "坚果炮台", note: "获得坚果护盾，破盾后短暂狂热", tone: "gold" },
+    "pea>nut": { name: "豌豆坚果", note: "受击积蓄反击豌豆", tone: "gold" },
+    "cherry>pea": { name: "爆豆射手", note: "每第六发变为爆裂豌豆", tone: "gold" },
+    "pea>cherry": { name: "豌豆霰爆", note: "爆炸前喷射一轮豌豆", tone: "gold" },
+    "frost>pea": { name: "双寒射手", note: "连续命中会短暂冻结目标", tone: "gold" },
+    "pea>frost": { name: "冰晶连射", note: "寒冰弹附带一枚低伤害追弹", tone: "gold" },
+    "sun>nut": { name: "太阳能坚果", note: "损失耐久时掉落小阳光", tone: "gold" },
+    "nut>sun": { name: "温室花盘", note: "护盾存在时产能更快", tone: "gold" },
+    "cherry>nut": { name: "爆心坚果", note: "被击破时发动终末爆炸", tone: "gold" },
+    "frost>nut": { name: "冻土坚果", note: "啃咬者会被持续减速", tone: "gold" },
+    "corn>pea": { name: "玉米连荚", note: "豌豆弹有概率把僵尸定在原地", tone: "gold" },
+    "pea>corn": { name: "豆粒投手", note: "玉米弹会分裂出一枚追击豌豆", tone: "gold" },
+    "frost>corn": { name: "冰糖玉米", note: "定身同时附带寒冰减速", tone: "gold" },
+    "pepper>nut": { name: "熔芯坚果", note: "坚果被击破时灼烧整条路线", tone: "gold" },
+    "mushroom>sun": { name: "星辉花盘", note: "产阳光时射出穿透星弹", tone: "gold" },
+    "sun>mushroom": { name: "日光星菇", note: "快速星弹命中后生成微光阳光", tone: "gold" }
+  };
+
+  const RANK_DAMAGE = [1, 1.35, 1.85];
+  const RANK_HP = [1, 1.25, 1.6];
+
+  function unique(arr) { return [...new Set(arr)]; }
+
+  function previewFusion(donor, host) {
+    if (!donor || !host || donor.uid === host.uid) return { valid: false, reason: "请选择另一株植物" };
+    if (donor.baseId === host.baseId && donor.genes.length === 0 && host.genes.length === 0) {
+      if (host.rank >= 3) return { valid: false, reason: "已经达到三星" };
+      return { valid: true, same: true, name: `${PLANTS[host.baseId].short} ${host.rank + 1}★`, note: "同株融合：升星并恢复部分耐久", tone: "rank" };
+    }
+    const gene = PLANTS[donor.baseId].gene;
+    if (host.genes.length >= 2 && !host.genes.includes(gene)) return { valid: false, reason: "基因槽已满" };
+    const key = `${donor.baseId}>${host.baseId}`;
+    const recipe = RECIPES[key];
+    const duplicate = host.genes.includes(gene);
+    return {
+      valid: true,
+      same: false,
+      gene,
+      authored: Boolean(recipe),
+      name: recipe?.name || `${PLANTS[donor.baseId].short}${PLANTS[host.baseId].short}`,
+      note: recipe?.note || (duplicate ? `${geneName(gene)}基因强化` : `继承“${geneName(gene)}”基因`),
+      tone: recipe?.tone || "generic"
+    };
+  }
+
+  function geneName(id) {
+    return ({ shooter: "射击", producer: "产能", guard: "防御", frost: "寒冰", burst: "爆破", stun: "定身", fire: "灼烧", pierce: "穿透", crit: "暴击", weaken: "虚弱", haste: "加速", splash: "溅射", multishot: "连射", heal: "治疗", armor: "重甲" })[id] || id;
+  }
+
+  function fuse(donor, host) {
+    const preview = previewFusion(donor, host);
+    if (!preview.valid) return { ok: false, preview };
+    if (preview.same) {
+      host.rank = Math.min(3, host.rank + 1);
+      const def = PLANTS[host.baseId];
+      host.maxHp = Math.round(def.hp * RANK_HP[host.rank - 1] + host.genes.filter(g => g === "guard").length * 700);
+      host.hp = Math.min(host.maxHp, host.hp + host.maxHp * .35);
+    } else {
+      const duplicate = host.genes.includes(preview.gene);
+      host.genes = unique([...host.genes, preview.gene]);
+      if (duplicate) host.geneLevels[preview.gene] = Math.min(3, (host.geneLevels[preview.gene] || 1) + 1);
+      else host.geneLevels[preview.gene] = 1;
+      host.displayName = preview.name;
+      if (preview.gene === "guard") {
+        host.maxHp += 700;
+        host.hp += 700;
+        host.shield = (host.shield || 0) + 700;
+      }
+      if (preview.gene === "armor") {
+        host.maxHp += 1100;
+        host.hp += 1100;
+        host.shield = (host.shield || 0) + 1100;
+      }
+    }
+    host.fusions = (host.fusions || 0) + 1;
+    return { ok: true, preview, host };
+  }
+
+  function createPlant(baseId, uid, row, col) {
+    const d = PLANTS[baseId];
+    return {
+      uid, baseId, row, col, rank: 1, genes: [], geneLevels: {}, displayName: d.name,
+      hp: d.hp, maxHp: d.hp, shield: 0, timer: d.interval || 1, attackCount: 0,
+      age: 0, hitFlash: 0, bob: Math.random() * 6, fusions: 0, alive: true
+    };
+  }
+
+  function damageFor(plant) {
+    const d = PLANTS[plant.baseId];
+    return Math.round((d.damage || 0) * RANK_DAMAGE[plant.rank - 1]);
+  }
+
+  return { PLANTS, RECIPES, RANK_DAMAGE, RANK_HP, previewFusion, fuse, createPlant, damageFor, geneName };
+});

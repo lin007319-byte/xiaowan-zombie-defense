@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#10271f">
+  <title>小万大站僵尸 · 无限防守版</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%2310271f'/%3E%3Cpath d='M16 38C18 18 39 12 51 14c0 18-10 34-31 30 8-8 16-14 25-20-12 4-20 10-29 20z' fill='%23c9f26b'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="app-shell">
+    <header class="topline">
+      <div class="brand"><span class="brand-seed">✦</span> 小万大站僵尸 <small>ENDLESS DEFENSE v2.0</small></div>
+      <div class="actions">
+        <button id="soundBtn" class="icon-btn" aria-label="切换声音">♫</button>
+        <button id="pauseBtn" class="icon-btn" aria-label="暂停游戏">Ⅱ</button>
+      </div>
+    </header>
+
+    <section class="game-frame" aria-label="小万大站僵尸游戏">
+      <canvas id="game" width="1280" height="720" tabindex="0" aria-label="小万大站僵尸无限战场。选择植物卡后点击草坪种植，拖动一株植物到另一株上进行融合。"></canvas>
+      <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+      <div id="startPanel" class="panel start-panel visible">
+        <div class="eyebrow">植物融合塔防 · 无限防守</div>
+        <h1>让每一株植物<br><em>长出另一种可能</em></h1>
+        <p>种下植物，拖到另一株上即时融合。尸潮永不停止，敌人会随波次持续强化；看看小万能守到第几波。</p>
+        <div class="feature-row">
+          <span>15 种植物</span><span>225 种定向组合</span><span>14 类僵尸</span><span>无限波次</span>
+        </div>
+        <button id="startBtn" class="primary-btn">开始无限防守 <b>→</b></button>
+        <button id="howBtn" class="text-btn">先看操作说明</button>
+      </div>
+
+      <div id="howPanel" class="panel how-panel">
+        <button class="close-btn" data-close="howPanel" aria-label="关闭">×</button>
+        <div class="eyebrow">30 秒上手</div>
+        <h2>种植、拖动、融合</h2>
+        <ol>
+          <li><b>选择卡片</b><span>点击下方植物卡，再点击草坪空格完成种植。</span></li>
+          <li><b>拖动供体</b><span>按住场上一株植物，拖到另一株植物上。</span></li>
+          <li><b>观察预览</b><span>金色提示表示专属配方，绿色表示通用融合。</span></li>
+          <li><b>同株升星</b><span>相同主体融合会升星，最高三星。</span></li>
+        </ol>
+        <p class="hint">推荐开局：向日葵 → 豌豆，得到会发射阳光种子的“阳光豌豆”。</p>
+        <button class="primary-btn" data-close="howPanel">明白了</button>
+      </div>
+
+      <div id="pausePanel" class="panel compact-panel">
+        <div class="eyebrow">战斗暂停</div>
+        <h2>花园正在等你</h2>
+        <button id="resumeBtn" class="primary-btn">继续战斗</button>
+        <button id="restartBtnPause" class="text-btn">重新开始</button>
+      </div>
+
+      <div id="resultPanel" class="panel result-panel">
+        <div id="resultEyebrow" class="eyebrow">无限防守结束</div>
+        <h2 id="resultTitle">刷新下一次纪录</h2>
+        <p id="resultCopy"></p>
+        <div id="resultStats" class="result-stats"></div>
+        <button id="restartBtn" class="primary-btn">再守一次 <b>↻</b></button>
+      </div>
+    </section>
+
+    <footer>
+      <span>操作：点击卡片种植 · 拖动植物融合 · 空格暂停</span>
+      <span>小万大站僵尸 · 无限防守版</span>
+    </footer>
+  </main>
+  <output id="testTelemetry" hidden aria-hidden="true"></output>
+  <script src="src/core.js"></script>
+  <script src="src/game.js"></script>
+</body>
+</html>
