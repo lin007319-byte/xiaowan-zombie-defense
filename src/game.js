@@ -15,8 +15,8 @@
   const PLANT_SPRITES={pea:0,sun:1,nut:2,frost:3,cherry:4,corn:5,pepper:6,mushroom:7,cactus:8,garlic:9,coffee:10,melon:11,bamboo:12,lotus:13,pumpkin:14};
   const ZOMBIE_SPRITES={basic:0,cone:1,bucket:2,runner:3,paper:4,shield:5,healer:6,football:7,balloon:8,miner:9,dancer:10,giant:11,imp:12,ice:13};
   const art={plants:new Image(),zombies:new Image()};
-  art.plants.src="assets/plants-atlas.png?v=2.1.0";
-  art.zombies.src="assets/zombies-atlas.png?v=2.1.0";
+  art.plants.src="assets/plants-atlas.png?v=2.2.0";
+  art.zombies.src="assets/zombies-atlas.png?v=2.2.0";
   const qaDuration = Number(new URLSearchParams(location.search).get("testDuration"));
   const QA_MODE = Number.isFinite(qaDuration) && qaDuration >= 2 && qaDuration < 300;
   const WAVE_SECONDS = QA_MODE ? qaDuration : BASE_WAVE_SECONDS;
@@ -389,6 +389,12 @@
   addEventListener("blur",()=>{if(state.mode==="playing"&&!state.paused)togglePause();});
 
   showPanel("startPanel");
+
+  fetch(new URL("api/status",location.href),{cache:"no-store"}).then(r=>r.ok?r.json():null).then(info=>{
+    if(!info?.ok)return;
+    const status=document.getElementById("runtimeStatus");
+    if(status)status.textContent=`Cloudflare 动态版 · v${info.version} · ${info.colo}`;
+  }).catch(()=>{});
 
   window.__gardenDebug={
     state, Core, reset, endGame, spawnZombie,
