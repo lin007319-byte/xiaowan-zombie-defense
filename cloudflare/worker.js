@@ -1,4 +1,4 @@
-const VERSION = "2.8.1-worker";
+const VERSION = "2.8.2-worker";
 
 export default {
   async fetch(request, env) {
@@ -7,7 +7,7 @@ export default {
     if (url.pathname === "/api/status") {
       return Response.json({
         ok: true,
-        game: "小万大站僵尸",
+        game: "植物大战僵尸融合欠费版",
         version: VERSION,
         mode: "dynamic-cloudflare-worker",
         generatedAt: new Date().toISOString(),
