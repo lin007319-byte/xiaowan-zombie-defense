@@ -22,6 +22,8 @@ assert.equal(Object.keys(Core.PLANTS).length, 48, "the expanded base roster shou
 assert.equal(Object.keys(Catalog.FUSIONS).length, 200, "the new document contains 200 fusion plants");
 assert.equal(Object.keys(Catalog.RECIPES).length, 168, "documented and equivalent materials should yield 168 executable drag steps");
 assert.equal(Object.values(Catalog.FUSIONS).filter(plant => plant.available).length, 142, "142 plants are reachable from the expanded base roster");
+assert.equal(Core.PLANTS.fume.interval, 1.45, "大喷菇应每 1.45 秒喷射一次毒气");
+assert.equal(Core.PLANTS.fume.damage, 24, "大喷菇每次毒气伤害应为 24");
 
 for (const [pair, fusionId] of Object.entries(Catalog.RECIPES)) {
   const [a, b] = pair.split("|");
