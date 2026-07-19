@@ -288,12 +288,12 @@
       ? Array.from({length:5},(_,i)=>-Math.PI/2+i*TAU/5)
       : radial
           ? [-.42,-.21,0,.21,.42]
-          : Array.from({length:count},(_,i)=>(i<backShots?Math.PI:0)+(i-(count-1)/2)*.035);
+          : Array.from({length:count},(_,i)=>i<backShots?Math.PI:0);
     for(let i=0;i<angles.length;i++){
-      const a=angles[i],backward=Math.cos(a)<0,speed=radial?305:290+i*14,ignited=p.genes.includes("ignite"),tipRadius=isStar?38:0;
+      const a=angles[i],backward=Math.cos(a)<0,speed=radial?305:290,ignited=p.genes.includes("ignite"),tipRadius=isStar?38:0,straightIndex=backward?i:i-backShots;
       state.bullets.push({
-        x:tipRadius?c.x+Math.cos(a)*tipRadius:c.x+(backward?-26:26)-i*3,
-        y:tipRadius?c.y+Math.sin(a)*tipRadius:c.y-9+(radial?0:i*7),
+        x:tipRadius?c.x+Math.cos(a)*tipRadius:c.x+(backward?-26:26)+(backward?straightIndex*9:-straightIndex*9),
+        y:tipRadius?c.y+Math.sin(a)*tipRadius:c.y-9,
         row:p.row,vx:Math.cos(a)*speed,vy:Math.sin(a)*speed,spin:Math.random()*TAU,
         kind:isStar?"star":radial?"star":p.baseId,
         damage:Math.max(8,Core.damageFor(p)*(i&&!radial&&!authoredCount?0.62:1)*scale*(ignited?1.35:1)),
@@ -306,7 +306,7 @@
     const c=cellCenter(p.row,p.col), value=25+(p.rank-1)*10;p.attackAnim=.55; spawnSun(c.x,c.y-38,value,false);
     if(p.baseId==="lotus"||p.genes.includes("heal"))for(const ally of state.plants)if(ally.alive&&Math.abs(ally.row-p.row)<=1&&Math.abs(ally.col-p.col)<=2)ally.hp=Math.min(ally.maxHp,ally.hp+90*p.rank);
     if(p.baseId==="lantern")for(const z of state.zombies)if(z.alive&&Math.abs(z.x-c.x)<560&&(z.kind==="flyer"||z.kind==="balloon")){z.grounded=Math.max(z.grounded||0,5);z.revealed=3;burstParticles(z.x,z.y-25,"#ffe882",8,40);}
-    if(p.genes.includes("shooter")||p.genes.includes("pierce")||p.baseId==="lantern"){const target=mostDangerousRow();for(let i=0;i<(p.baseId==="lantern"?2:3);i++)state.bullets.push({x:c.x+18,y:c.y-12,row:target,vx:270+i*18,vy:(i-1)*22,spin:0,kind:p.baseId==="lantern"?"light":"seed",damage:(p.baseId==="lantern"?18:10)*p.rank,frost:false,sunny:false,stun:p.genes.includes("stun"),fire:p.genes.includes("fire"),light:p.baseId==="lantern"||p.genes.includes("reveal"),hitsLeft:p.genes.includes("pierce")?2:1,hitIds:[],alive:true,life:4,color:"#f2d35d"});}
+    if(p.genes.includes("shooter")||p.genes.includes("pierce")||p.baseId==="lantern")for(let i=0;i<(p.baseId==="lantern"?2:3);i++)state.bullets.push({x:c.x+18-i*9,y:c.y-12,row:p.row,vx:270,vy:0,spin:0,kind:p.baseId==="lantern"?"light":"seed",damage:(p.baseId==="lantern"?18:10)*p.rank,frost:false,sunny:false,stun:p.genes.includes("stun"),fire:p.genes.includes("fire"),light:p.baseId==="lantern"||p.genes.includes("reveal"),hitsLeft:p.genes.includes("pierce")?2:1,hitIds:[],alive:true,life:4,color:"#f2d35d"});
   }
   function supportPulse(p){
     p.attackAnim=.5;const c=cellCenter(p.row,p.col);
