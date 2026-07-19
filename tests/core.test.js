@@ -4,7 +4,7 @@ const Core = require("../src/core.js");
 let uid = 1;
 const make = id => Core.createPlant(id, uid++, 0, 0);
 const plantIds = Object.keys(Core.PLANTS);
-assert.equal(plantIds.length, 25, "v2.6 should expose 25 plant types");
+assert.equal(plantIds.length, 25, "v2.7 should expose 25 plant types");
 
 for (const donorId of plantIds) {
   for (const hostId of plantIds) {
@@ -26,6 +26,7 @@ for (let a = 0; a < plantIds.length; a++) {
     assert.equal(firstB.baseId, secondA.baseId, `${plantIds[a]}+${plantIds[b]} base should ignore order`);
     assert.equal(firstB.displayName, secondA.displayName, `${plantIds[a]}+${plantIds[b]} name should ignore order`);
     assert.deepEqual([...firstB.genes].sort(), [...secondA.genes].sort(), `${plantIds[a]}+${plantIds[b]} genes should ignore order`);
+    assert.deepEqual([...firstB.materialIds].sort(), [...secondA.materialIds].sort(), `${plantIds[a]}+${plantIds[b]} visual traits should ignore order`);
     assert.equal(firstB.maxHp, secondA.maxHp, `${plantIds[a]}+${plantIds[b]} hp should ignore order`);
     assert.equal(Core.damageFor(firstB), Core.damageFor(secondA), `${plantIds[a]}+${plantIds[b]} damage should ignore order`);
   }
@@ -53,5 +54,6 @@ assert.equal(peaNutB.displayName, "坚果炮台");
 assert.equal(nutPeaB.displayName, "坚果炮台");
 assert.equal(peaNutB.baseId, nutPeaB.baseId);
 assert.deepEqual(peaNutB.genes, nutPeaB.genes);
+assert.deepEqual(peaNutB.materialIds, nutPeaB.materialIds);
 
 console.log(`core tests passed: ${plantIds.length * (plantIds.length + 1) / 2} order-independent combinations + rank checks`);

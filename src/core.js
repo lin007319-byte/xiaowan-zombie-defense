@@ -125,12 +125,13 @@
       const duplicate = host.genes.includes(preview.gene);
       host.baseId = preview.baseId;
       host.genes = unique([...host.genes, preview.gene]);
+      host.materialIds = unique([...(host.materialIds || []), preview.materialId]);
       if (duplicate) host.geneLevels[preview.gene] = Math.min(3, (host.geneLevels[preview.gene] || 1) + 1);
       else host.geneLevels[preview.gene] = 1;
       host.displayName = preview.name;
       const def = PLANTS[host.baseId];
-      const guardLevel = host.geneLevels.guard || 0, armorLevel = host.geneLevels.armor || 0;
-      host.maxHp = Math.round(def.hp * RANK_HP[host.rank - 1] + guardLevel * 700 + armorLevel * 1100);
+      const guardLevel = host.geneLevels.guard || 0, armorLevel = host.geneLevels.armor || 0, tallLevel = host.geneLevels.tall || 0;
+      host.maxHp = Math.round(def.hp * RANK_HP[host.rank - 1] + guardLevel * 700 + armorLevel * 1100 + tallLevel * 1800);
       host.hp = Math.min(host.maxHp, Math.round(host.maxHp * oldRatio + host.maxHp * .12));
       host.shield = guardLevel * 700 + armorLevel * 1100;
       host.timer = def.interval || 1;
@@ -143,7 +144,7 @@
   function createPlant(baseId, uid, row, col) {
     const d = PLANTS[baseId];
     return {
-      uid, baseId, row, col, rank: 1, genes: [], geneLevels: {}, displayName: d.name,
+      uid, baseId, row, col, rank: 1, genes: [], materialIds: [], geneLevels: {}, displayName: d.name,
       hp: d.hp, maxHp: d.hp, shield: 0, timer: d.interval || 1, attackCount: 0,
       age: 0, hitFlash: 0, attackAnim: 0, bob: Math.random() * 6, fusions: 0, alive: true
     };
