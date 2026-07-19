@@ -497,7 +497,7 @@
   const escapeText=value=>String(value??"").replace(/[&<>"']/g,char=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"})[char]);
   const almanacPlants=[
     ...TYPES.map(id=>{const d=Core.PLANTS[id];return{kind:"base",id,name:d.name,color:d.color,sigil:CARD_SIGILS[id]||"●",available:true,recipe:"基础植物",hp:d.hp,damage:d.damage||0,interval:d.interval||0,description:`阳光消耗：${d.cost}；冷却：${d.cooldown}秒；类型：${Core.geneName(d.gene)}`} }),
-    ...Object.values(Core.FUSIONS).map((d,index)=>({kind:"fusion",id:d.id,name:d.name,color:d.color,sigil:["✦","◆","✹","⬢","●","◉"][index%6],available:Boolean(d.available),recipe:d.materials.join(" + "),hp:d.hp,damage:d.damage||0,interval:d.interval||0,description:d.description}))
+    ...Object.values(Core.FUSIONS).map((d,index)=>({kind:"fusion",id:d.id,name:d.name,color:d.color,sigil:["✦","◆","✹","⬢","●","◉"][index%6],available:Boolean(d.available),recipe:d.recipe||d.materials.join(" + "),hp:d.hp,damage:d.damage||0,interval:d.interval||0,description:d.description}))
   ];
   function almanacCard(item){
     const damage=item.damage?item.damage:"—",interval=item.interval?`${item.interval}秒`:"—",badge=item.kind==="base"?"基础":item.available?"可融合":"待补材料";

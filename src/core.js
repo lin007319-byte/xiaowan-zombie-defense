@@ -75,26 +75,17 @@
   void LEGACY_RECIPES;
   const FUSIONS = Catalog?.FUSIONS || {};
   const FUSION_RECIPES = Catalog?.RECIPES || {};
-  const DOCUMENT_OVERRIDES = {
-    fusion08: { body: "burst", interval: 1.4 },
-    fusion10: { body: "melee", interval: 30 },
-    fusion12: { body: "melee", interval: 40 },
-    fusion17: { body: "trap", interval: .25 },
-    fusion22: { body: "shooter", interval: 30 },
-    fusion32: { body: "trap", interval: 1 },
-    fusion33: { body: "trap", interval: 1 }
-  };
-  for (const [id, override] of Object.entries(DOCUMENT_OVERRIDES)) if (FUSIONS[id]) Object.assign(FUSIONS[id], override);
   const pairKey = (a, b) => [a, b].sort().join("|");
 
   function unique(arr) { return [...new Set(arr)]; }
 
   function previewFusion(donor, host) {
     if (!donor || !host || donor.uid === host.uid) return { valid: false, reason: "请选择另一株植物" };
-    if (donor.fusionId || host.fusionId) return { valid: false, reason: "普通融合植物不能继续叠加融合" };
-    const fusionId = FUSION_RECIPES[pairKey(donor.baseId, host.baseId)];
+    const donorToken = donor.fusionId || donor.baseId;
+    const hostToken = host.fusionId || host.baseId;
+    const fusionId = FUSION_RECIPES[pairKey(donorToken, hostToken)];
     const fusion = FUSIONS[fusionId];
-    if (!fusion) return { valid: false, reason: "该组合不在配方文件中" };
+    if (!fusion) return { valid: false, reason: "该组合不在新版图鉴配方中" };
     return {
       valid: true,
       fusionId,
@@ -129,7 +120,7 @@
     host.timer = fusion.interval || 1;
     host.detonate = fusion.body === "burst" ? .8 : undefined;
     host.attackCount = 0;
-    host.fusions = (host.fusions || 0) + 1;
+    host.fusions = (host.fusions || 0) + (donor.fusions || 0) + 1;
     return { ok: true, preview, host };
   }
 
