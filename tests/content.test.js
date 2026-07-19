@@ -39,7 +39,7 @@ assert.match(game, /state\.timeScale=state\.timeStop \? \.08 : 1/);
 assert.match(game, /function chomp\(/);
 assert.match(game, /function spikeAttack\(/);
 assert.match(game, /classic-plants-atlas\.png/);
-assert.match(game, /fusion-traits-atlas-v1\.png/);
+assert.match(game, /fusion-traits-atlas-v2\.png/);
 assert.match(game, /function drawFusionTraits\(p\)/);
 assert.match(game, /function updateInheritedTraits\(p,dt,def,hasEnemy\)/);
 assert.match(game, /p\.genes\.includes\("devour"\)/);
