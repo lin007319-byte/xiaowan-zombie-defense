@@ -7,14 +7,14 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
-  <title>植物大战僵尸融合欠费版 · v3.1</title>
+  <title>植物大战僵尸融合欠费版 · v3.2</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%2310271f'/%3E%3Cpath d='M16 38C18 18 39 12 51 14c0 18-10 34-31 30 8-8 16-14 25-20-12 4-20 10-29 20z' fill='%23c9f26b'/%3E%3C/svg%3E">
-  <link rel="stylesheet" href="styles.css?v=3.1.0">
+  <link rel="stylesheet" href="styles.css?v=3.2.0">
 </head>
 <body>
   <main class="app-shell">
     <header class="topline">
-      <div class="brand"><span class="brand-seed">✦</span> 植物大战僵尸融合欠费版 <small>TEXT DEFENSE v3.1</small></div>
+      <div class="brand"><span class="brand-seed">✦</span> 植物大战僵尸融合欠费版 <small>TEXT DEFENSE v3.2</small></div>
       <div class="actions">
         <button id="soundBtn" class="icon-btn" aria-label="切换声音">♫</button>
         <button id="pauseBtn" class="icon-btn" aria-label="暂停游戏">Ⅱ</button>
@@ -24,6 +24,7 @@
     <section class="game-frame" aria-label="植物大战僵尸融合欠费版游戏">
       <canvas id="game" width="1280" height="720" tabindex="0" aria-label="植物大战僵尸融合欠费版战场。选择植物卡后点击空格种植，点击已有植物直接融合；也可以拖动植物进行移动或融合。"></canvas>
       <div id="toast" class="toast" role="status" aria-live="polite"></div>
+      <button id="timeStopBtn" class="time-stop-btn" type="button" aria-label="开启时停" aria-pressed="false" disabled><span>◷</span><b>时停</b><small>8% 流速</small></button>
 
       <div id="startPanel" class="panel start-panel visible">
         <div class="eyebrow">植物融合塔防 · 选择玩法</div>
@@ -87,7 +88,7 @@
           <li><b>自由拖动</b><span>所有植物都能拖动：放到空格移动，放到植物上融合。</span></li>
           <li><b>观察预览</b><span>金色提示表示文件中存在对应融合配方。</span></li>
           <li><b>严格配方</b><span>未被文件收录的组合不会融合，也不会生成临时植物。</span></li>
-          <li><b>F3 时停</b><span>按住 F3 将战斗降到 8% 流速，松开立即恢复。</span></li>
+          <li><b>时停按钮</b><span>点击战场左下角“时停”，再次点击恢复正常速度。</span></li>
         </ol>
         <p class="hint">推荐开局：向日葵 + 豌豆射手，得到每第三发命中掉落小阳光的“豌豆向日葵”。</p>
         <button class="primary-btn" data-close="howPanel">明白了</button>
@@ -111,13 +112,13 @@
     </section>
 
     <footer>
-      <span>操作：卡片点空格种植 · 卡片点植物直接融合 · 拖动移动/融合 · F3 时停</span>
+      <span>操作：卡片点空格种植 · 卡片点植物直接融合 · 拖动移动/融合 · 左下角时停</span>
       <span id="runtimeStatus">植物大战僵尸融合欠费版 · 双模式选卡版</span>
     </footer>
   </main>
   <output id="testTelemetry" hidden aria-hidden="true"></output>
-  <script src="src/fusion-catalog.js?v=3.1.0"></script>
-  <script src="src/core.js?v=3.1.0"></script>
-  <script src="src/game.js?v=3.1.0"></script>
+  <script src="src/fusion-catalog.js?v=3.2.0"></script>
+  <script src="src/core.js?v=3.2.0"></script>
+  <script src="src/game.js?v=3.2.0"></script>
 </body>
 </html>

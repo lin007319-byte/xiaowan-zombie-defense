@@ -91,6 +91,7 @@
       cameraShake: 0, zombieKindsSeen: new Set(), lastKillSoundAt: -1
     });
     hidePanels();
+    syncTimeStopButton();
     initAudio();
     sfx("start");
     toast(`${tower?"塔防":"经典"}模式开始：先布阵，10 秒后出现僵尸`);
@@ -115,6 +116,8 @@
     const el = document.getElementById("toast"); el.textContent = text; el.classList.add("show");
     clearTimeout(toastTimer); toastTimer = setTimeout(()=>el.classList.remove("show"), 1900);
   }
+  function syncTimeStopButton(){const button=document.getElementById("timeStopBtn"),ready=state.mode==="playing"&&!state.paused;button.disabled=!ready;button.classList.toggle("ready",ready);button.classList.toggle("active",ready&&state.timeStop);button.setAttribute("aria-pressed",String(ready&&state.timeStop));button.setAttribute("aria-label",state.timeStop?"关闭时停":"开启时停");button.querySelector("b").textContent=state.timeStop?"恢复":"时停";button.querySelector("small").textContent=state.timeStop?"正常流速":"8% 流速";}
+  function toggleTimeStop(){if(state.mode!=="playing"||state.paused)return;state.timeStop=!state.timeStop;sfx(state.timeStop?"timeStop":"timeResume");toast(state.timeStop?"时停开启：再次点击左下角按钮恢复":"时停结束：恢复正常速度");syncTimeStopButton();}
 
   function cellAt(x,y) {
     const col = Math.floor((x-GRID.x)/GRID.cw), row = Math.floor((y-GRID.y)/GRID.ch);
@@ -372,14 +375,14 @@
   function updateParticles(dt){for(const p of state.particles){p.life-=dt;p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=(p.grav||0)*dt;p.vx*=.985;}state.particles=state.particles.filter(p=>p.life>0);for(const f of state.floaters){f.life-=dt;f.y-=24*dt;}state.floaters=state.floaters.filter(f=>f.life>0);}
   function updateEffects(dt){for(const e of state.effects)e.life-=dt;state.effects=state.effects.filter(e=>e.life>0);}
 
-  function endGame(){if(state.mode!=="playing")return;state.mode="lost";state.paused=true;sfx("lose");
+  function endGame(){if(state.mode!=="playing")return;state.mode="lost";state.paused=true;state.timeStop=false;syncTimeStopButton();sfx("lose");
     document.getElementById("resultEyebrow").textContent=state.gameMode==="tower"?"塔防模式结束":"经典模式失败";
     document.getElementById("resultTitle").textContent=`坚持到了第 ${state.wave} 波`;
     document.getElementById("resultCopy").textContent="僵尸突破了最后一道防线。重新安排融合顺序，下一局挑战更高纪录。";
     document.getElementById("resultStats").innerHTML=`<div><b>${state.wave}</b><span>生存波数</span></div><div><b>${state.stats.kills}</b><span>击败僵尸</span></div><div><b>${state.stats.fusions}</b><span>完成融合</span></div>`;
     showPanel("resultPanel");
   }
-  function winClassic(){if(state.mode!=="playing")return;state.mode="won";state.paused=true;sfx("wave");
+  function winClassic(){if(state.mode!=="playing")return;state.mode="won";state.paused=true;state.timeStop=false;syncTimeStopButton();sfx("wave");
     document.getElementById("resultEyebrow").textContent="经典模式通关";
     document.getElementById("resultTitle").textContent="十波尸潮全部击退！";
     document.getElementById("resultCopy").textContent="你的十株植物守住了花园。可以更换阵容重玩，或进入塔防模式挑战无限波次。";
@@ -474,7 +477,7 @@
     ctx.fillStyle="rgba(10,31,24,.88)";roundRect(20,18,236,96,18);ctx.fill();ctx.fillStyle="#ffe06a";ctx.font="900 30px system-ui";ctx.textAlign="left";ctx.fillText(`☀ ${Math.floor(state.sun)}`,42,58);ctx.fillStyle="#a8c0b1";ctx.font="700 12px system-ui";ctx.fillText(`阳光资源  ·  +${state.stats.sunMade}`,43,84);ctx.fillStyle="rgba(255,255,255,.09)";roundRect(43,92,188,7,4);ctx.fill();ctx.fillStyle="#90df70";roundRect(43,92,188*waveProgress,7,4);ctx.fill();
     const modeLabel=state.gameMode==="classic"?`经典模式 · ${state.wave}/10 波`:`塔防模式 · 第 ${state.wave} 波`;
     ctx.fillStyle="rgba(10,31,24,.88)";roundRect(1000,632,254,68,16);ctx.fill();ctx.fillStyle="#dcebe0";ctx.font="800 15px system-ui";ctx.fillText(modeLabel,1024,660);ctx.fillStyle="#94ac9d";ctx.font="650 12px system-ui";ctx.fillText(`生存 ${minutes}:${seconds}  ·  ${state.fps} FPS`,1024,682);
-    if(state.timeStop){ctx.save();ctx.fillStyle="rgba(72,76,160,.11)";ctx.fillRect(0,0,W,608);const pulse=1+Math.sin(state.time*5)*.05;ctx.translate(640,78);ctx.scale(pulse,pulse);ctx.fillStyle="rgba(19,26,70,.94)";roundRect(-132,-28,264,48,16);ctx.fill();ctx.strokeStyle="#a9c9ff";ctx.lineWidth=2;ctx.stroke();ctx.fillStyle="#ddebff";ctx.textAlign="center";ctx.font="900 16px system-ui";ctx.fillText("⏱ F3 时停 · 8% 流速",0,3);ctx.restore();}
+    if(state.timeStop){ctx.save();ctx.fillStyle="rgba(72,76,160,.11)";ctx.fillRect(0,0,W,608);const pulse=1+Math.sin(state.time*5)*.05;ctx.translate(640,78);ctx.scale(pulse,pulse);ctx.fillStyle="rgba(19,26,70,.94)";roundRect(-132,-28,264,48,16);ctx.fill();ctx.strokeStyle="#a9c9ff";ctx.lineWidth=2;ctx.stroke();ctx.fillStyle="#ddebff";ctx.textAlign="center";ctx.font="900 16px system-ui";ctx.fillText("⏱ 时停中 · 8% 流速",0,3);ctx.restore();}
     if(state.waveBanner>0){const names=["第一波 · 萌芽","第二波 · 快步逼近","第三波 · 报纸狂潮","第四波 · 医疗护卫","第五波 · 铁桶列队","第六波 · 球场冲锋","第七波 · 天空与地底","第八波 · 冰夜舞会","第九波 · 巨人脚步","第十波 · 万怪决战"],endlessNames=["尸潮再临","精英集结","极速突袭","重甲压境","无尽进化"];const name=names[state.wave-1]||`第 ${state.wave} 波 · ${endlessNames[(state.wave-11)%endlessNames.length]}`;ctx.globalAlpha=Math.min(1,state.waveBanner);ctx.fillStyle="rgba(10,31,24,.78)";roundRect(465,104,350,36,13);ctx.fill();ctx.textAlign="center";ctx.fillStyle="#f8e17a";ctx.font="900 18px system-ui";ctx.fillText(name,640,129);ctx.globalAlpha=1;}
   }
   function drawCards(){for(let i=0;i<state.loadout.length;i++){const id=state.loadout[i],d=Core.PLANTS[id],x=CARD_X+i*CARD_STEP,y=CARD_Y,sel=state.selected===id,ready=state.cooldowns[id]<=0&&state.sun>=d.cost;ctx.fillStyle=sel?"#eff5cf":ready?"rgba(20,69,48,.94)":"rgba(14,45,35,.9)";ctx.strokeStyle=sel?"#ffe064":"rgba(255,255,255,.16)";ctx.lineWidth=sel?3:1;roundRect(x,y,CARD_W,CARD_H,12);ctx.fill();ctx.stroke();ctx.textAlign="center";ctx.fillStyle=sel?"#183126":"#f4fff6";ctx.font=`900 ${d.short.length>3?9:10}px system-ui`;ctx.fillText(d.short,x+CARD_W/2,y+22,CARD_W-8);ctx.fillStyle=sel?"#315440":d.color;ctx.font="800 9px system-ui";ctx.fillText("文字植物",x+CARD_W/2,y+39,CARD_W-8);ctx.fillStyle=sel?"#5f5318":"#ffe177";ctx.font="800 9px system-ui";ctx.fillText(`☀ ${d.cost}`,x+CARD_W/2,y+56);ctx.fillStyle=sel?"#5f5318":"#91aa9b";ctx.font="800 8px system-ui";ctx.fillText(`${i+1}`,x+CARD_W/2,y+69);if(state.cooldowns[id]>0){const ratio=state.cooldowns[id]/d.cooldown;ctx.fillStyle="rgba(5,16,12,.72)";roundRect(x,y,CARD_W,CARD_H*ratio,12);ctx.fill();ctx.fillStyle="#d9e6dd";ctx.textAlign="center";ctx.font="800 11px system-ui";ctx.fillText(state.cooldowns[id].toFixed(1),x+CARD_W/2,y+43);}}}
@@ -518,12 +521,12 @@
   document.querySelectorAll("[data-close]").forEach(b=>b.onclick=()=>state.mode==="menu"?showPanel("startPanel"):hidePanels());
   document.getElementById("pauseBtn").onclick=togglePause;document.getElementById("resumeBtn").onclick=togglePause;
   document.getElementById("restartBtn").onclick=reset;document.getElementById("restartBtnPause").onclick=reset;
-  document.getElementById("resultMenuBtn").onclick=()=>{state.mode="menu";state.paused=false;showPanel("startPanel");};
+  document.getElementById("resultMenuBtn").onclick=()=>{state.mode="menu";state.paused=false;state.timeStop=false;syncTimeStopButton();showPanel("startPanel");};
   document.getElementById("soundBtn").onclick=()=>{state.sound=!state.sound;document.getElementById("soundBtn").textContent=state.sound?"♫":"×";if(state.sound)initAudio();};
-  function togglePause(){if(state.mode!=="playing")return;state.paused=!state.paused;if(state.paused){sfx("pause");showPanel("pausePanel");}else{sfx("resume");hidePanels();}}
-  addEventListener("keydown",e=>{if(e.code==="F3"){e.preventDefault();if(state.mode==="playing"&&!state.paused&&!state.timeStop){state.timeStop=true;sfx("timeStop");toast("时停开启：松开 F3 恢复正常速度");}}if(e.code==="Space"){e.preventDefault();togglePause();}if(e.code==="Escape"&&state.paused)togglePause();});
-  addEventListener("keyup",e=>{if(e.code==="F3"){e.preventDefault();if(state.timeStop){state.timeStop=false;sfx("timeResume");}}});
-  addEventListener("blur",()=>{state.timeStop=false;if(state.mode==="playing"&&!state.paused)togglePause();});
+  document.getElementById("timeStopBtn").onclick=toggleTimeStop;
+  function togglePause(){if(state.mode!=="playing")return;state.paused=!state.paused;if(state.paused){state.timeStop=false;sfx("pause");showPanel("pausePanel");}else{sfx("resume");hidePanels();}syncTimeStopButton();}
+  addEventListener("keydown",e=>{if(e.code==="Space"){e.preventDefault();togglePause();}if(e.code==="Escape"&&state.paused)togglePause();});
+  addEventListener("blur",()=>{state.timeStop=false;if(state.mode==="playing"&&!state.paused)togglePause();else syncTimeStopButton();});
 
   buildPlantPicker();renderAlmanac();showPanel("startPanel");
 
