@@ -28,6 +28,8 @@ assert.match(game, /function winClassic\(\)/);
 for (const id of zombieIds) assert.match(game, new RegExp(`${id}:\\{hp:`), `missing zombie definition: ${id}`);
 assert.match(game, /const ZOMBIE_POOLS=\[/);
 assert.match(game, /const LOADOUT_SIZE = 10;/);
+assert.match(game, /confirmPlantsBtn\.disabled=count===0/);
+assert.match(game, /pendingLoadout\.length<1\|\|pendingLoadout\.length>LOADOUT_SIZE/);
 assert.match(game, /potato:"◆"/);
 assert.match(game, /umbrella:"☂"/);
 assert.match(game, /for\(let i=0;i<state\.loadout\.length;i\+\+\)/);

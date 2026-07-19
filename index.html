@@ -28,7 +28,7 @@
       <div id="startPanel" class="panel start-panel visible">
         <div class="eyebrow">植物融合塔防 · 选择玩法</div>
         <h1>选择你的<br><em>守卫方式</em></h1>
-        <p>先选择模式，再从完整植物图鉴中带上 10 种植物。融合只看植物组合，不再受放置先后顺序影响。</p>
+        <p>先选择模式，再从完整植物图鉴中自由选择 1—10 种植物。融合只看植物组合，不再受放置先后顺序影响。</p>
         <div class="feature-row">
           <span>30 种基础植物</span><span>465 种无序组合</span><span>融合继承全特征</span><span>双模式</span>
         </div>
@@ -45,15 +45,15 @@
 
       <div id="selectPanel" class="panel select-panel" aria-label="选择植物">
         <div class="select-heading">
-          <div><div id="selectEyebrow" class="eyebrow">经典模式 · 出战准备</div><h2>选择 10 种植物</h2></div>
-          <div class="pick-counter"><b id="pickCount">0</b><span>/ 10</span></div>
+          <div><div id="selectEyebrow" class="eyebrow">经典模式 · 出战准备</div><h2>选择出战植物</h2></div>
+          <div class="pick-counter"><b id="pickCount">0</b><span>/ 最多 10</span></div>
         </div>
         <p class="select-copy">全部基础植物都可选择；两种植物正放反放，都会得到同一个融合结果。</p>
         <div id="plantPicker" class="plant-picker" role="list" aria-label="全部植物"></div>
         <div class="select-actions">
           <button id="backToModesBtn" class="secondary-btn">← 返回模式</button>
           <button id="recommendBtn" class="secondary-btn">推荐阵容</button>
-          <button id="confirmPlantsBtn" class="primary-btn" disabled>还需选择 10 种</button>
+          <button id="confirmPlantsBtn" class="primary-btn" disabled>请至少选择 1 种</button>
         </div>
       </div>
 
@@ -95,7 +95,7 @@
     </footer>
   </main>
   <output id="testTelemetry" hidden aria-hidden="true"></output>
-  <script src="src/core.js?v=2.9.3"></script>
-  <script src="src/game.js?v=2.9.3"></script>
+  <script src="src/core.js?v=2.9.4"></script>
+  <script src="src/game.js?v=2.9.4"></script>
 </body>
 </html>
