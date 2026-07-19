@@ -55,4 +55,12 @@ assert.equal(Core.previewFusion(make("sun"), make("pea")).name, "豌豆向日葵
 assert.equal(Catalog.FUSIONS.fusion001.name, "巨型坚果");
 assert.equal(Catalog.FUSIONS.fusion200.name, "星辉忧郁菇");
 
+const ability = name => Object.values(Catalog.FUSIONS).find(plant => plant.name === name).abilities;
+assert.equal(ability("双发射手").shotCount, 2);
+assert.deepEqual([ability("裂荚射手").shotCount, ability("裂荚射手").backShots, ability("裂荚射手").bounce], [3, 2, true]);
+assert.equal(ability("机枪射手").shotCount, 4);
+assert.deepEqual([ability("豌豆向日葵").sunEvery, ability("豌豆向日葵").sunValue, ability("豌豆向日葵").sunCycle], [3, 5, 25]);
+assert.equal(ability("坚果射手").pierce, true);
+assert.equal(ability("超级樱桃射手").splash, true);
+
 console.log("core tests passed: 200 documented plants, 85 drag steps, 82 reachable multi-stage fusions");
