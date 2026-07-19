@@ -65,8 +65,24 @@
 
   const RANK_DAMAGE = [1, 1.35, 1.85];
   const RANK_HP = [1, 1.25, 1.6];
+  const PLANT_IDS = Object.keys(PLANTS);
+  const PLANT_INDEX = Object.fromEntries(PLANT_IDS.map((id, index) => [id, index]));
+  const pairKey = (a, b) => PLANT_INDEX[a] <= PLANT_INDEX[b] ? `${a}|${b}` : `${b}|${a}`;
+  const PAIR_RECIPES = {};
+  for (const [key, recipe] of Object.entries(RECIPES)) {
+    const [materialId, baseId] = key.split(">");
+    const keyForPair = pairKey(materialId, baseId);
+    if (!PAIR_RECIPES[keyForPair]) PAIR_RECIPES[keyForPair] = { materialId, baseId, recipe };
+  }
 
   function unique(arr) { return [...new Set(arr)]; }
+
+  function canonicalPlan(a, b) {
+    const authored = PAIR_RECIPES[pairKey(a, b)];
+    if (authored) return authored;
+    const baseId = PLANT_INDEX[a] <= PLANT_INDEX[b] ? a : b;
+    return { baseId, materialId: baseId === a ? b : a, recipe: null };
+  }
 
   function previewFusion(donor, host) {
     if (!donor || !host || donor.uid === host.uid) return { valid: false, reason: "请选择另一株植物" };
@@ -74,17 +90,19 @@
       if (host.rank >= 3) return { valid: false, reason: "已经达到三星" };
       return { valid: true, same: true, name: `${PLANTS[host.baseId].short} ${host.rank + 1}★`, note: "同株融合：升星并恢复部分耐久", tone: "rank" };
     }
-    const gene = PLANTS[donor.baseId].gene;
+    const plan = canonicalPlan(donor.baseId, host.baseId);
+    const gene = PLANTS[plan.materialId].gene;
     if (host.genes.length >= 2 && !host.genes.includes(gene)) return { valid: false, reason: "基因槽已满" };
-    const key = `${donor.baseId}>${host.baseId}`;
-    const recipe = RECIPES[key];
+    const recipe = plan.recipe;
     const duplicate = host.genes.includes(gene);
     return {
       valid: true,
       same: false,
+      baseId: plan.baseId,
+      materialId: plan.materialId,
       gene,
       authored: Boolean(recipe),
-      name: recipe?.name || `${PLANTS[donor.baseId].short}${PLANTS[host.baseId].short}`,
+      name: recipe?.name || `${PLANTS[plan.baseId].short}${PLANTS[plan.materialId].short}`,
       note: recipe?.note || (duplicate ? `${geneName(gene)}基因强化` : `继承“${geneName(gene)}”基因`),
       tone: recipe?.tone || "generic"
     };
@@ -103,21 +121,20 @@
       host.maxHp = Math.round(def.hp * RANK_HP[host.rank - 1] + host.genes.filter(g => g === "guard").length * 700);
       host.hp = Math.min(host.maxHp, host.hp + host.maxHp * .35);
     } else {
+      const oldRatio = host.maxHp > 0 ? Math.max(0, host.hp / host.maxHp) : 1;
       const duplicate = host.genes.includes(preview.gene);
+      host.baseId = preview.baseId;
       host.genes = unique([...host.genes, preview.gene]);
       if (duplicate) host.geneLevels[preview.gene] = Math.min(3, (host.geneLevels[preview.gene] || 1) + 1);
       else host.geneLevels[preview.gene] = 1;
       host.displayName = preview.name;
-      if (preview.gene === "guard") {
-        host.maxHp += 700;
-        host.hp += 700;
-        host.shield = (host.shield || 0) + 700;
-      }
-      if (preview.gene === "armor") {
-        host.maxHp += 1100;
-        host.hp += 1100;
-        host.shield = (host.shield || 0) + 1100;
-      }
+      const def = PLANTS[host.baseId];
+      const guardLevel = host.geneLevels.guard || 0, armorLevel = host.geneLevels.armor || 0;
+      host.maxHp = Math.round(def.hp * RANK_HP[host.rank - 1] + guardLevel * 700 + armorLevel * 1100);
+      host.hp = Math.min(host.maxHp, Math.round(host.maxHp * oldRatio + host.maxHp * .12));
+      host.shield = guardLevel * 700 + armorLevel * 1100;
+      host.timer = def.interval || 1;
+      host.attackCount = 0;
     }
     host.fusions = (host.fusions || 0) + 1;
     return { ok: true, preview, host };

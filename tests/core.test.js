@@ -4,7 +4,7 @@ const Core = require("../src/core.js");
 let uid = 1;
 const make = id => Core.createPlant(id, uid++, 0, 0);
 const plantIds = Object.keys(Core.PLANTS);
-assert.equal(plantIds.length, 25, "v2.4 should expose 25 plant types");
+assert.equal(plantIds.length, 25, "v2.6 should expose 25 plant types");
 
 for (const donorId of plantIds) {
   for (const hostId of plantIds) {
@@ -14,7 +14,20 @@ for (const donorId of plantIds) {
     const result = Core.fuse(donor, host);
     assert.equal(result.ok, true);
     if (donorId === hostId) assert.equal(host.rank, 2);
-    else assert.ok(host.genes.includes(Core.PLANTS[donorId].gene));
+  }
+}
+
+for (let a = 0; a < plantIds.length; a++) {
+  for (let b = a + 1; b < plantIds.length; b++) {
+    const firstA = make(plantIds[a]), firstB = make(plantIds[b]);
+    const secondA = make(plantIds[a]), secondB = make(plantIds[b]);
+    Core.fuse(firstA, firstB);
+    Core.fuse(secondB, secondA);
+    assert.equal(firstB.baseId, secondA.baseId, `${plantIds[a]}+${plantIds[b]} base should ignore order`);
+    assert.equal(firstB.displayName, secondA.displayName, `${plantIds[a]}+${plantIds[b]} name should ignore order`);
+    assert.deepEqual([...firstB.genes].sort(), [...secondA.genes].sort(), `${plantIds[a]}+${plantIds[b]} genes should ignore order`);
+    assert.equal(firstB.maxHp, secondA.maxHp, `${plantIds[a]}+${plantIds[b]} hp should ignore order`);
+    assert.equal(Core.damageFor(firstB), Core.damageFor(secondA), `${plantIds[a]}+${plantIds[b]} damage should ignore order`);
   }
 }
 
@@ -32,4 +45,13 @@ assert.equal(host.displayName, "阳光豌豆");
 assert.deepEqual(host.genes, ["producer"]);
 assert.ok(host.maxHp >= host.hp);
 
-console.log(`core tests passed: ${plantIds.length ** 2} directional combinations + rank and authored recipe checks`);
+const peaNutA = make("pea"), peaNutB = make("nut");
+Core.fuse(peaNutA, peaNutB);
+const nutPeaA = make("nut"), nutPeaB = make("pea");
+Core.fuse(nutPeaA, nutPeaB);
+assert.equal(peaNutB.displayName, "坚果炮台");
+assert.equal(nutPeaB.displayName, "坚果炮台");
+assert.equal(peaNutB.baseId, nutPeaB.baseId);
+assert.deepEqual(peaNutB.genes, nutPeaB.genes);
+
+console.log(`core tests passed: ${plantIds.length * (plantIds.length + 1) / 2} order-independent combinations + rank checks`);
