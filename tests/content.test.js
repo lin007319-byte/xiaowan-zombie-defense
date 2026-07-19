@@ -24,6 +24,8 @@ assert.match(game, /function winClassic\(\)/);
 for (const id of zombieIds) assert.match(game, new RegExp(`${id}:\\{hp:`), `missing zombie definition: ${id}`);
 assert.match(game, /const ZOMBIE_POOLS=\[/);
 assert.match(game, /const LOADOUT_SIZE = 10;/);
+assert.match(game, /potato:"◆"/);
+assert.match(game, /umbrella:"☂"/);
 assert.match(game, /for\(let i=0;i<state\.loadout\.length;i\+\+\)/);
 assert.match(game, /data-game-mode/);
 assert.match(game, /plant && state\.selected/);

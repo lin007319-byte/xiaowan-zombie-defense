@@ -4,7 +4,12 @@ const Core = require("../src/core.js");
 let uid = 1;
 const make = id => Core.createPlant(id, uid++, 0, 0);
 const plantIds = Object.keys(Core.PLANTS);
-assert.equal(plantIds.length, 25, "v2.7 should expose 25 plant types");
+assert.equal(plantIds.length, 30, "v2.9 should expose the requested 30 plant types");
+assert.deepEqual(Object.values(Core.PLANTS).map(plant => plant.name), [
+  "豌豆射手", "向日葵", "樱桃炸弹", "坚果墙", "土豆地雷", "寒冰射手", "大嘴花", "忧郁菇", "小喷菇", "阳光菇",
+  "大蘑菇", "魅惑菇", "寒冰菇", "毁灭菇", "荷叶", "火爆辣椒", "地刺", "火炬树桩", "高坚果", "路灯花",
+  "仙人掌", "三叶草", "杨桃", "南瓜", "磁力菇", "卷心菜投手", "玉米投手", "大蒜", "叶子保护伞", "西瓜投手"
+]);
 
 for (const donorId of plantIds) {
   for (const hostId of plantIds) {

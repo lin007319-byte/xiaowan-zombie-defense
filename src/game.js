@@ -9,12 +9,11 @@
   const CARD_X = 274, CARD_STEP = 71, CARD_W = 66, CARD_H = 76;
   const TYPES = Object.keys(Core.PLANTS);
   const LOADOUT_SIZE = 10;
-  const RECOMMENDED_LOADOUT = ["sun","pea","nut","frost","cherry","corn","melon","tallnut","torchwood","magnet"];
+  const RECOMMENDED_LOADOUT = ["sun","pea","nut","potato","frost","chomper","puff","fume","corn","melon"];
   const TAU = Math.PI * 2;
   const BASE_WAVE_SECONDS = 30;
   const SPAWN_GAPS = [9.8,9.2,8.6,8,7.4,6.8,6.2,5.7,5.2,4.8];
-  const CARD_SIGILS={pea:"●",sun:"✹",nut:"⬢",frost:"❄",cherry:"✦",corn:"▦",pepper:"♨",mushroom:"✧",cactus:"✣",garlic:"◈",coffee:"◆",melon:"◉",bamboo:"║",lotus:"❀",pumpkin:"⬡",doom:"☢",iceShroom:"❅",star:"★",lantern:"☀",magnet:"∩",chomper:"◇",torchwood:"♨",tallnut:"▥",blover:"✤",spikeweed:"✷"};
-  const PLANT_SPRITES={pea:0,sun:1,nut:2,frost:3,cherry:4,corn:5,pepper:6,mushroom:7,cactus:8,garlic:9,coffee:10,melon:11,bamboo:12,lotus:13,pumpkin:14};
+  const CARD_SIGILS={pea:"●",sun:"✹",cherry:"✦",nut:"⬢",potato:"◆",frost:"❄",chomper:"◇",gloom:"◉",puff:"·",sunshroom:"☀",fume:"◒",hypno:"◎",iceShroom:"❅",doom:"☢",lilypad:"⌁",pepper:"♨",spikeweed:"✷",torchwood:"♨",tallnut:"▥",lantern:"☀",cactus:"✣",blover:"✤",star:"★",pumpkin:"⬡",magnet:"∩",cabbage:"●",corn:"▦",garlic:"◈",umbrella:"☂",melon:"◉"};
   const ZOMBIE_SPRITES={basic:0,cone:1,bucket:2,runner:3,paper:4,shield:5,healer:6,football:7,balloon:8,miner:9,dancer:10,giant:11,imp:12,ice:13};
   const EXPANSION_SPRITES={doom:0,iceShroom:1,star:2,lantern:3,magnet:4,pole:5,flyer:6};
   const CLASSIC_SPRITES={chomper:0,torchwood:1,tallnut:2,blover:3,spikeweed:4};
@@ -256,9 +255,9 @@
   }
   function shoot(p,scale=1) {
     const c=cellCenter(p.row,p.col), def=Core.PLANTS[p.baseId]; p.attackCount++;p.attackAnim=.26;
-    let count=1+(p.genes.includes("shooter")?1:0)+(p.rank>=2&&p.baseId==="pea"?1:0)+(p.baseId==="bamboo"?1:0)+(p.genes.includes("multishot")?1:0);
-    const radial=p.baseId==="star"||p.genes.includes("radial"),angles=radial?[-.42,-.21,0,.21,.42]:Array.from({length:count},(_,i)=>(i-(count-1)/2)*.035);
-    for(let i=0;i<angles.length;i++){const a=angles[i],speed=radial?305:290+i*14,ignited=p.genes.includes("ignite");state.bullets.push({x:c.x+26-i*3,y:c.y-9+(radial?0:i*7),row:p.row,vx:Math.cos(a)*speed,vy:Math.sin(a)*speed,spin:Math.random()*TAU,kind:radial?"star":p.baseId,damage:Math.max(8,Core.damageFor(p)*(i&& !radial?0.62:1)*scale*(ignited?1.35:1)),frost:p.baseId==="frost"||p.genes.includes("frost")||p.genes.includes("deepfreeze"),deepfreeze:p.genes.includes("deepfreeze"),sunny:p.genes.includes("producer"),burst:(p.genes.includes("burst")&&p.attackCount%6===0)||(p.genes.includes("nova")&&p.attackCount%10===0),stun:p.baseId==="corn"||p.genes.includes("stun"),fire:p.genes.includes("fire")||ignited,gust:p.genes.includes("gust"),crit:p.baseId==="cactus"||p.genes.includes("crit"),light:p.baseId==="lantern"||p.genes.includes("reveal"),magnet:p.genes.includes("magnet"),splash:p.baseId==="melon"||p.genes.includes("splash"),hitsLeft:p.baseId==="mushroom"||p.genes.includes("pierce")?2:1,hitIds:[],alive:true,life:4,color:ignited?"#ff9148":def.color});}
+    let count=1+(p.genes.includes("shooter")?1:0)+(p.rank>=2&&p.baseId==="pea"?1:0)+(p.genes.includes("multishot")?1:0);
+    const radial=p.baseId==="star"||p.baseId==="gloom"||p.genes.includes("radial"),angles=radial?[-.42,-.21,0,.21,.42]:Array.from({length:count},(_,i)=>(i-(count-1)/2)*.035);
+    for(let i=0;i<angles.length;i++){const a=angles[i],speed=radial?305:290+i*14,ignited=p.genes.includes("ignite");state.bullets.push({x:c.x+26-i*3,y:c.y-9+(radial?0:i*7),row:p.row,vx:Math.cos(a)*speed,vy:Math.sin(a)*speed,spin:Math.random()*TAU,kind:radial?"star":p.baseId,damage:Math.max(8,Core.damageFor(p)*(i&& !radial?0.62:1)*scale*(ignited?1.35:1)),frost:p.baseId==="frost"||p.genes.includes("frost")||p.genes.includes("deepfreeze"),deepfreeze:p.genes.includes("deepfreeze"),sunny:p.genes.includes("producer"),burst:(p.genes.includes("burst")&&p.attackCount%6===0)||(p.genes.includes("nova")&&p.attackCount%10===0),stun:p.baseId==="corn"||p.genes.includes("stun"),fire:p.genes.includes("fire")||ignited,gust:p.genes.includes("gust"),crit:p.baseId==="cactus"||p.genes.includes("crit"),light:p.baseId==="lantern"||p.genes.includes("reveal"),magnet:p.genes.includes("magnet"),splash:p.baseId==="melon"||p.baseId==="cabbage"||p.genes.includes("splash"),hitsLeft:["puff","fume","gloom"].includes(p.baseId)||p.genes.includes("pierce")?2:1,hitIds:[],alive:true,life:4,color:ignited?"#ff9148":def.color});}
     sfx("shoot");
   }
   function produce(p) {
@@ -307,7 +306,7 @@
         if(z.attackTimer<=0&&z.slam<=0){z.attackTimer=1.7;z.slam=1.7;z.slamHit=false;sfx("slamWind");}
         if(z.slam>0){z.slam=Math.max(0,z.slam-dt);if(!z.slamHit&&z.slam<=.56){let smash=150;if(z.weaken>0)smash*=.65;damagePlant(target,smash);z.slamHit=true;state.cameraShake=11;state.effects.push({type:"impact",x:cellCenter(target.row,target.col).x,y:cellCenter(target.row,target.col).y+20,life:.5,max:.5,color:"#e4c38a"});burstParticles(cellCenter(target.row,target.col).x,cellCenter(target.row,target.col).y+20,"#d6b67a",28,150);sfx("slam");}}
       }
-      else if(target){z.attackTimer-=dt;if(z.attackTimer<=0){let bite=50;if(z.weaken>0)bite*=.65;damagePlant(target,bite);z.attackAnim=.34;const tc=cellCenter(target.row,target.col);state.effects.push({type:"bite",x:tc.x+30,y:tc.y-5,life:.28,max:.28,color:"#f4e2bd"});if(target.genes.includes("spike")){z.hp-=45;z.hit=1;if(z.hp<=0)killZombie(z);}if(z.kind==="ice")target.freeze=Math.max(target.freeze||0,1.5);if(target.baseId==="garlic"||target.genes.includes("weaken")){z.weaken=3;if(Math.random()<.32)z.row=Math.max(0,Math.min(4,z.row+(z.row===4?-1:z.row===0?1:Math.random()<.5?-1:1)));}z.attackTimer=.5;sfx("bite");}}
+      else if(target){z.attackTimer-=dt;if(z.attackTimer<=0){let bite=50;if(z.weaken>0)bite*=.65;damagePlant(target,bite);z.attackAnim=.34;const tc=cellCenter(target.row,target.col);state.effects.push({type:"bite",x:tc.x+30,y:tc.y-5,life:.28,max:.28,color:"#f4e2bd"});if(target.genes.includes("spike")){z.hp-=45;z.hit=1;if(z.hp<=0)killZombie(z);}if(z.kind==="ice")target.freeze=Math.max(target.freeze||0,1.5);if(target.baseId==="garlic"||target.baseId==="hypno"||target.genes.includes("weaken")){z.weaken=3;if(Math.random()<.32)z.row=Math.max(0,Math.min(4,z.row+(z.row===4?-1:z.row===0?1:Math.random()<.5?-1:1)));}z.attackTimer=.5;sfx("bite");}}
       else z.x-=z.speed*(z.slow>0?.55:1)*(z.kind==="paper"&&z.hp<z.maxHp*.5?1.7:1)*dt;
       if(z.x<GRID.x-46){if(QA_MODE){z.alive=false;clearRow(z.row);}else if(state.mowers[z.row]>0){state.mowers[z.row]--;const left=state.mowers[z.row];z.alive=false;clearRow(z.row);toast(left>0?`第 ${z.row+1} 路推土机启动，还剩 ${left} 次机会`:`第 ${z.row+1} 路推土机已耗尽，下次突破将失败`);state.cameraShake=7;sfx("mower");}else{endGame();return;}}
     }
