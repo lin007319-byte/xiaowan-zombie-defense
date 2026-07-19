@@ -10,7 +10,7 @@ assert.match(game, /const SPAWN_GAPS = \[9\.8,9\.2,8\.6,8,7\.4,6\.8,6\.2,5\.7,5\
 assert.match(game, /state\.zombies\.length<48/);
 assert.match(game, /Math\.max\(2\.7,base\*endless\)/);
 assert.match(game, /function drawTextEntity\(/);
-assert.match(game, /garden-background-v1\.webp/);
+assert.match(game, /classic-lawn-background\.jpg/);
 assert.match(game, /const ZOMBIE_TEXT=/);
 assert.match(game, /我是小推车/);
 assert.match(game, /我是阳光/);

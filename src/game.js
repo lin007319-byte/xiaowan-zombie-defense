@@ -19,7 +19,7 @@
   const CLASSIC_SPRITES={chomper:0,torchwood:1,tallnut:2,blover:3,spikeweed:4};
   const TRAIT_SPRITES=Object.fromEntries(TYPES.map((id,index)=>[id,index]));
   const art={plants:new Image(),zombies:new Image(),expansion:new Image(),classic:new Image(),traits:new Image(),background:new Image()};
-  art.background.src="assets/garden-background-v1.webp?v=2.8.1";
+  art.background.src="assets/classic-lawn-background.jpg?v=2.9.1";
   const ZOMBIE_TEXT={basic:"我是僵尸",cone:"我是路障僵尸",bucket:"我是铁桶僵尸",runner:"我是奔跑僵尸",paper:"我是报纸僵尸",shield:"我是盾牌僵尸",healer:"我是治疗僵尸",football:"我是橄榄球僵尸",balloon:"我是气球僵尸",miner:"我是矿工僵尸",dancer:"我是舞王僵尸",giant:"我是巨人僵尸",imp:"我是小鬼僵尸",ice:"我是寒冰僵尸",pole:"我是撑杆僵尸",flyer:"我是飞行僵尸"};
   const qaDuration = Number(new URLSearchParams(location.search).get("testDuration"));
   const QA_MODE = Number.isFinite(qaDuration) && qaDuration >= 2 && qaDuration < 300;
@@ -354,7 +354,7 @@
     drawBackground();drawGrid();drawMowers();drawSuns();drawPlants();drawZombies();drawBullets();drawEffects();drawParticles();drawHUD();drawCards();drawFusionPreview();drawTutorial();ctx.restore();
   }
   function drawBackground(){
-    if(art.background.complete&&art.background.naturalWidth){ctx.drawImage(art.background,0,0,W,H);const shade=ctx.createLinearGradient(0,0,0,H);shade.addColorStop(0,"rgba(8,31,26,.06)");shade.addColorStop(.7,"rgba(8,31,20,.02)");shade.addColorStop(1,"rgba(5,22,16,.2)");ctx.fillStyle=shade;ctx.fillRect(0,0,W,H);return;}
+    if(art.background.complete&&art.background.naturalWidth){const sourceW=Math.round(art.background.naturalWidth*.81);ctx.drawImage(art.background,0,0,sourceW,art.background.naturalHeight,0,0,W,H);const shade=ctx.createLinearGradient(0,0,0,H);shade.addColorStop(0,"rgba(8,31,26,.04)");shade.addColorStop(.7,"rgba(8,31,20,.01)");shade.addColorStop(1,"rgba(5,22,16,.15)");ctx.fillStyle=shade;ctx.fillRect(0,0,W,H);return;}
     const sky=ctx.createLinearGradient(0,0,0,H);sky.addColorStop(0,"#8bc9a0");sky.addColorStop(.34,"#b7ddb1");sky.addColorStop(.35,"#50875c");sky.addColorStop(1,"#1c5135");ctx.fillStyle=sky;ctx.fillRect(0,0,W,H);
     ctx.fillStyle="#f3d893";ctx.beginPath();ctx.arc(1100,75,42,0,TAU);ctx.fill();
     ctx.fillStyle="rgba(244,255,240,.36)";for(let i=0;i<4;i++){const x=120+i*285+Math.sin(state.time*.08+i)*16,y=58+(i%2)*25;ctx.beginPath();ctx.ellipse(x,y,46,16,0,0,TAU);ctx.ellipse(x+36,y+4,35,13,0,0,TAU);ctx.ellipse(x-31,y+5,28,11,0,0,TAU);ctx.fill();}
