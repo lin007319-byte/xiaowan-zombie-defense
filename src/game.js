@@ -140,7 +140,9 @@
     if (card) { selectCard(card); return; }
     if (!cell) return;
     const plant=plantAt(cell.row,cell.col);
-    if (plant) {
+    if (plant && state.selected) {
+      fuseSelectedInto(plant);
+    } else if (plant) {
       state.pointerDown={pt,plant,at:performance.now()};
       state.dragPoint=pt;
     } else if (state.selected) placeSelected(cell.row,cell.col);
@@ -187,6 +189,15 @@
     state.sun-=def.cost; state.cooldowns[id]=def.cooldown; state.stats.planted++; state.selected=null; state.tutorial.planted=true;
     const c=cellCenter(row,col); burstParticles(c.x,c.y,def.color,18,60); floater(c.x,c.y-40,`-${def.cost} ☀`,"#ffe47d"); sfx("plant");
     if(def.body==="burst") plant.detonate=.8;
+  }
+  function fuseSelectedInto(host) {
+    const id=state.selected,def=Core.PLANTS[id];if(!id||!host)return;
+    if(state.cooldowns[id]>0){toast(`卡片还需冷却 ${state.cooldowns[id].toFixed(1)} 秒`);return;}
+    if(state.sun<def.cost){state.selected=null;toast("阳光不足");tone(120,.12,"square",.02);return;}
+    const donor=Core.createPlant(id,state.nextUid,host.row,host.col),preview=Core.previewFusion(donor,host);
+    if(!preview.valid){toast(preview.reason);tone(120,.12,"square",.02);return;}
+    state.nextUid++;state.sun-=def.cost;state.cooldowns[id]=def.cooldown;state.stats.planted++;state.selected=null;state.tutorial.planted=true;state.tutorial.dragged=true;
+    const c=cellCenter(host.row,host.col);floater(c.x,c.y+42,`-${def.cost} ☀`,"#ffe47d");commitFusion(donor,host);
   }
   function commitFusion(donor,host) {
     const preview=Core.previewFusion(donor,host); const c=cellCenter(host.row,host.col);
