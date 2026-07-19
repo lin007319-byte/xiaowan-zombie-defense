@@ -13,6 +13,7 @@ assert.match(game, /groundedWalk/);
 assert.match(game, /const stride=walk/);
 assert.match(game, /leftLift=Math\.max\(0,stepLift\)/);
 assert.match(game, /mowers: \[2,2,2,2,2\]/);
+assert.match(game, /spawnTimer: 10/);
 assert.match(game, /state\.mowers\[z\.row\]--/);
 assert.match(game, /function poolForWave\(wave\)/);
 assert.doesNotMatch(game, /battleTime>=state\.duration/);

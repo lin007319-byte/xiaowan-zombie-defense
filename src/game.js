@@ -28,7 +28,7 @@
   const state = {
     mode: "menu", paused: false, sound: true, timeStop: false, timeScale: 1, time: 0, battleTime: 0,
     sun: 400, selected: null, hoverCell: null, plants: [], zombies: [], bullets: [], particles: [], effects: [], suns: [], floaters: [],
-    nextUid: 1, spawnTimer: 6, naturalSunTimer: 2.5, wave: 1, waveBanner: 0, mowers: [2,2,2,2,2],
+    nextUid: 1, spawnTimer: 10, naturalSunTimer: 2.5, wave: 1, waveBanner: 0, mowers: [2,2,2,2,2],
     dragging: null, dragPoint: null, dragTarget: null, dragCell: null, preview: null, pointerDown: null,
     cooldowns: Object.fromEntries(TYPES.map(t => [t, 0])),
     stats: { planted: 0, fusions: 0, discovered: new Set(), kills: 0, sunMade: 0 },
@@ -82,7 +82,7 @@
     Object.assign(state, {
       mode: "playing", paused: false, timeStop: false, timeScale: 1, time: 0, battleTime: 0, sun: 400, selected: null, hoverCell: null,
       plants: [], zombies: [], bullets: [], particles: [], effects: [], suns: [], floaters: [], nextUid: 1,
-      spawnTimer: 6, naturalSunTimer: 2.5, wave: 1, waveBanner: 2.2, mowers: [2,2,2,2,2],
+      spawnTimer: 10, naturalSunTimer: 2.5, wave: 1, waveBanner: 2.2, mowers: [2,2,2,2,2],
       dragging: null, dragPoint: null, dragTarget: null, dragCell: null, preview: null, pointerDown: null,
       cooldowns: Object.fromEntries(TYPES.map(t => [t, 0])),
       stats: { planted: 0, fusions: 0, discovered: new Set(), kills: 0, sunMade: 0 },
