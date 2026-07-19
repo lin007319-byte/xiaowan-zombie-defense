@@ -539,7 +539,7 @@
   }
   function renderAlmanac(){
     const query=almanacSearch.value.trim().toLowerCase();
-    const visible=almanacPlants.filter(item=>(almanacFilter==="all"||item.kind===almanacFilter||(almanacFilter==="available"&&item.kind==="fusion"&&item.available))&&(!query||`${item.name} ${item.recipe} ${item.description}`.toLowerCase().includes(query)));
+    const visible=almanacPlants.filter(item=>(almanacFilter==="all"||(almanacFilter==="base"&&item.kind==="base")||(almanacFilter==="fusion"&&item.kind==="fusion"&&!item.ultimate)||(almanacFilter==="ultimate"&&item.ultimate)||(almanacFilter==="available"&&item.kind==="fusion"&&item.available))&&(!query||`${item.name} ${item.recipe} ${item.description}`.toLowerCase().includes(query)));
     almanacGrid.innerHTML=visible.length?visible.map(almanacCard).join(""):`<div class="almanac-empty">没有找到符合条件的植物卡片</div>`;
     almanacCount.textContent=`显示 ${visible.length} / ${almanacPlants.length} 张植物卡片`;
   }
