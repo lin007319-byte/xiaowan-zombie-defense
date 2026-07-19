@@ -5,8 +5,8 @@
   const ctx = canvas.getContext("2d", { alpha: false, desynchronized: true });
   const W = 1280, H = 720;
   const GRID = { x: 286, y: 142, cols: 9, rows: 5, cw: 96, ch: 96 };
-  const CARD_Y = 616;
-  const CARD_X = 36, CARD_STEP = 121, CARD_W = 112, CARD_H = 76;
+  const CARD_Y = 22;
+  const CARD_X = 274, CARD_STEP = 71, CARD_W = 66, CARD_H = 76;
   const TYPES = Object.keys(Core.PLANTS);
   const LOADOUT_SIZE = 10;
   const RECOMMENDED_LOADOUT = ["sun","pea","nut","frost","cherry","corn","melon","tallnut","torchwood","magnet"];
@@ -29,7 +29,7 @@
   const state = {
     mode: "menu", gameMode: "classic", loadout: [...RECOMMENDED_LOADOUT], paused: false, sound: true, timeStop: false, timeScale: 1, time: 0, battleTime: 0,
     sun: 400, selected: null, hoverCell: null, plants: [], zombies: [], bullets: [], particles: [], effects: [], suns: [], floaters: [],
-    nextUid: 1, spawnTimer: 10, naturalSunTimer: 2.5, wave: 1, waveBanner: 0, mowers: [2,2,2,2,2],
+    nextUid: 1, spawnTimer: 10, naturalSunTimer: 2.5, wave: 1, waveBanner: 0, mowers: [1,1,1,1,1],
     dragging: null, dragPoint: null, dragTarget: null, dragCell: null, preview: null, pointerDown: null,
     cooldowns: Object.fromEntries(TYPES.map(t => [t, 0])),
     stats: { planted: 0, fusions: 0, discovered: new Set(), kills: 0, sunMade: 0 },
@@ -84,7 +84,7 @@
     Object.assign(state, {
       mode: "playing", paused: false, timeStop: false, timeScale: 1, time: 0, battleTime: 0, sun: tower?500:400, selected: null, hoverCell: null,
       plants: [], zombies: [], bullets: [], particles: [], effects: [], suns: [], floaters: [], nextUid: 1,
-      spawnTimer: 10, naturalSunTimer: 2.5, wave: 1, waveBanner: 2.2, mowers: [2,2,2,2,2],
+      spawnTimer: 10, naturalSunTimer: 2.5, wave: 1, waveBanner: 2.2, mowers: [1,1,1,1,1],
       dragging: null, dragPoint: null, dragTarget: null, dragCell: null, preview: null, pointerDown: null,
       cooldowns: Object.fromEntries(TYPES.map(t => [t, 0])),
       stats: { planted: 0, fusions: 0, discovered: new Set(), kills: 0, sunMade: 0 },
@@ -126,9 +126,9 @@
     const r=canvas.getBoundingClientRect(); return {x:(evt.clientX-r.left)*W/r.width, y:(evt.clientY-r.top)*H/r.height};
   }
   function cardAt(x,y) {
-    if (y < CARD_Y || y > 708) return null;
+    if (y < CARD_Y || y > CARD_Y+CARD_H) return null;
     const i=Math.floor((x-CARD_X)/CARD_STEP);
-    if(i>=0&&i<state.loadout.length){const bx=CARD_X+i*CARD_STEP;if(x>=bx&&x<=bx+CARD_W&&y>=624&&y<=624+CARD_H)return state.loadout[i];}
+    if(i>=0&&i<state.loadout.length){const bx=CARD_X+i*CARD_STEP;if(x>=bx&&x<=bx+CARD_W)return state.loadout[i];}
     return null;
   }
 
@@ -217,7 +217,6 @@
     if(nextWave!==state.wave){
       state.wave=nextWave;state.waveBanner=2.4;sfx("wave");
       const reward=25+Math.min(75,Math.floor(state.wave/5)*10);state.sun+=reward;floater(640,118,`第 ${state.wave} 波 · +${reward} 阳光`,"#ffe173",1.05);
-      if(state.wave%10===0){const damaged=state.mowers.findIndex(v=>v<2);if(damaged>=0){state.mowers[damaged]++;toast(`坚持到第 ${state.wave} 波：补充了一次推土机机会`);}}
       if(QA_MODE)for(const [i,kind] of poolForWave(state.wave).entries()){state.zombieKindsSeen.add(kind);state.zombies.push(makeZombie(kind,i%5,1110+i*18));}
     }
     for(const k of TYPES) state.cooldowns[k]=Math.max(0,state.cooldowns[k]-dt);
@@ -356,13 +355,12 @@
     drawBackground();drawGrid();drawMowers();drawSuns();drawPlants();drawZombies();drawBullets();drawEffects();drawParticles();drawHUD();drawCards();drawFusionPreview();drawTutorial();ctx.restore();
   }
   function drawBackground(){
-    if(art.background.complete&&art.background.naturalWidth){ctx.drawImage(art.background,0,0,W,H);const shade=ctx.createLinearGradient(0,0,0,H);shade.addColorStop(0,"rgba(8,31,26,.06)");shade.addColorStop(.7,"rgba(8,31,20,.02)");shade.addColorStop(1,"rgba(5,22,16,.52)");ctx.fillStyle=shade;ctx.fillRect(0,0,W,H);ctx.fillStyle="rgba(7,27,20,.9)";ctx.fillRect(0,608,W,112);return;}
+    if(art.background.complete&&art.background.naturalWidth){ctx.drawImage(art.background,0,0,W,H);const shade=ctx.createLinearGradient(0,0,0,H);shade.addColorStop(0,"rgba(8,31,26,.06)");shade.addColorStop(.7,"rgba(8,31,20,.02)");shade.addColorStop(1,"rgba(5,22,16,.2)");ctx.fillStyle=shade;ctx.fillRect(0,0,W,H);return;}
     const sky=ctx.createLinearGradient(0,0,0,H);sky.addColorStop(0,"#8bc9a0");sky.addColorStop(.34,"#b7ddb1");sky.addColorStop(.35,"#50875c");sky.addColorStop(1,"#1c5135");ctx.fillStyle=sky;ctx.fillRect(0,0,W,H);
     ctx.fillStyle="#f3d893";ctx.beginPath();ctx.arc(1100,75,42,0,TAU);ctx.fill();
     ctx.fillStyle="rgba(244,255,240,.36)";for(let i=0;i<4;i++){const x=120+i*285+Math.sin(state.time*.08+i)*16,y=58+(i%2)*25;ctx.beginPath();ctx.ellipse(x,y,46,16,0,0,TAU);ctx.ellipse(x+36,y+4,35,13,0,0,TAU);ctx.ellipse(x-31,y+5,28,11,0,0,TAU);ctx.fill();}
     ctx.fillStyle="rgba(31,75,48,.42)";for(let i=0;i<13;i++){const x=i*110-30,h=45+(i%4)*18;ctx.beginPath();ctx.moveTo(x,135);ctx.quadraticCurveTo(x+40,135-h,x+90,135);ctx.fill();}
     ctx.fillStyle="rgba(38,92,55,.48)";for(let i=0;i<22;i++){const x=i*63+Math.sin(i)*18;ctx.beginPath();ctx.arc(x,132,18+(i%3)*4,Math.PI,TAU);ctx.fill();}
-    ctx.fillStyle="#183c2d";ctx.fillRect(0,608,W,112);
     ctx.fillStyle="#e9d1a0";ctx.fillRect(0,130,250,478);
     for(let i=0;i<70;i++){ctx.fillStyle=`rgba(70,46,28,${.05+(i%3)*.025})`;ctx.fillRect((i*47)%250,140+(i*83)%455,2+(i%4),2+(i%3));}
     for(let i=0;i<20;i++){const x=22+(i*79)%210,y=160+(i*113)%420;ctx.fillStyle=i%2?"#f1a3bd":"#f7d16a";ctx.beginPath();for(let a=0;a<5;a++){ctx.ellipse(x+Math.cos(a*TAU/5)*5,y+Math.sin(a*TAU/5)*5,3,5,a*TAU/5,0,TAU);}ctx.fill();}
@@ -429,13 +427,13 @@
     const waveProgress=(state.battleTime%WAVE_SECONDS)/WAVE_SECONDS,totalSeconds=Math.floor(state.battleTime),minutes=Math.floor(totalSeconds/60),seconds=String(totalSeconds%60).padStart(2,"0");
     ctx.fillStyle="rgba(10,31,24,.88)";roundRect(20,18,236,96,18);ctx.fill();ctx.fillStyle="#ffe06a";ctx.font="900 30px system-ui";ctx.textAlign="left";ctx.fillText(`☀ ${Math.floor(state.sun)}`,42,58);ctx.fillStyle="#a8c0b1";ctx.font="700 12px system-ui";ctx.fillText(`阳光资源  ·  +${state.stats.sunMade}`,43,84);ctx.fillStyle="rgba(255,255,255,.09)";roundRect(43,92,188,7,4);ctx.fill();ctx.fillStyle="#90df70";roundRect(43,92,188*waveProgress,7,4);ctx.fill();
     const modeLabel=state.gameMode==="classic"?`经典模式 · ${state.wave}/10 波`:`塔防模式 · 第 ${state.wave} 波`;
-    ctx.fillStyle="rgba(10,31,24,.85)";roundRect(1000,20,254,70,16);ctx.fill();ctx.fillStyle="#dcebe0";ctx.font="800 15px system-ui";ctx.fillText(modeLabel,1024,50);ctx.fillStyle="#94ac9d";ctx.font="650 12px system-ui";ctx.fillText(`生存 ${minutes}:${seconds}  ·  ${state.fps} FPS`,1024,72);
+    ctx.fillStyle="rgba(10,31,24,.88)";roundRect(1000,632,254,68,16);ctx.fill();ctx.fillStyle="#dcebe0";ctx.font="800 15px system-ui";ctx.fillText(modeLabel,1024,660);ctx.fillStyle="#94ac9d";ctx.font="650 12px system-ui";ctx.fillText(`生存 ${minutes}:${seconds}  ·  ${state.fps} FPS`,1024,682);
     if(state.timeStop){ctx.save();ctx.fillStyle="rgba(72,76,160,.11)";ctx.fillRect(0,0,W,608);const pulse=1+Math.sin(state.time*5)*.05;ctx.translate(640,78);ctx.scale(pulse,pulse);ctx.fillStyle="rgba(19,26,70,.94)";roundRect(-132,-28,264,48,16);ctx.fill();ctx.strokeStyle="#a9c9ff";ctx.lineWidth=2;ctx.stroke();ctx.fillStyle="#ddebff";ctx.textAlign="center";ctx.font="900 16px system-ui";ctx.fillText("⏱ F3 时停 · 8% 流速",0,3);ctx.restore();}
-    if(state.waveBanner>0){const names=["第一波 · 萌芽","第二波 · 快步逼近","第三波 · 报纸狂潮","第四波 · 医疗护卫","第五波 · 铁桶列队","第六波 · 球场冲锋","第七波 · 天空与地底","第八波 · 冰夜舞会","第九波 · 巨人脚步","第十波 · 万怪决战"],endlessNames=["尸潮再临","精英集结","极速突袭","重甲压境","无尽进化"];const name=names[state.wave-1]||`第 ${state.wave} 波 · ${endlessNames[(state.wave-11)%endlessNames.length]}`;ctx.globalAlpha=Math.min(1,state.waveBanner);ctx.fillStyle="rgba(10,31,24,.78)";roundRect(465,84,350,64,18);ctx.fill();ctx.textAlign="center";ctx.fillStyle="#f8e17a";ctx.font="900 25px system-ui";ctx.fillText(name,640,124);ctx.globalAlpha=1;}
+    if(state.waveBanner>0){const names=["第一波 · 萌芽","第二波 · 快步逼近","第三波 · 报纸狂潮","第四波 · 医疗护卫","第五波 · 铁桶列队","第六波 · 球场冲锋","第七波 · 天空与地底","第八波 · 冰夜舞会","第九波 · 巨人脚步","第十波 · 万怪决战"],endlessNames=["尸潮再临","精英集结","极速突袭","重甲压境","无尽进化"];const name=names[state.wave-1]||`第 ${state.wave} 波 · ${endlessNames[(state.wave-11)%endlessNames.length]}`;ctx.globalAlpha=Math.min(1,state.waveBanner);ctx.fillStyle="rgba(10,31,24,.78)";roundRect(465,104,350,36,13);ctx.fill();ctx.textAlign="center";ctx.fillStyle="#f8e17a";ctx.font="900 18px system-ui";ctx.fillText(name,640,129);ctx.globalAlpha=1;}
   }
-  function drawCards(){ctx.fillStyle="rgba(8,28,21,.96)";roundRect(18,610,1244,106,18);ctx.fill();for(let i=0;i<state.loadout.length;i++){const id=state.loadout[i],d=Core.PLANTS[id],x=CARD_X+i*CARD_STEP,y=624,sel=state.selected===id,ready=state.cooldowns[id]<=0&&state.sun>=d.cost;ctx.fillStyle=sel?"#eff5cf":ready?"#1d4935":"#173329";ctx.strokeStyle=sel?"#ffe064":"rgba(255,255,255,.12)";ctx.lineWidth=sel?3:1;roundRect(x,y,CARD_W,CARD_H,13);ctx.fill();ctx.stroke();ctx.fillStyle=sel?"#183126":"#f4fff6";ctx.textAlign="center";ctx.font=`900 ${d.short.length>3?10:11}px system-ui`;ctx.fillText("我是",x+27,y+31);ctx.fillStyle=sel?"#315440":d.color;ctx.fillText(d.short,x+27,y+48,44);ctx.fillStyle=sel?"#183126":"#e7f0e9";ctx.font="800 11px system-ui";ctx.textAlign="left";ctx.fillText(d.short,x+56,y+30);ctx.fillStyle=sel?"#5f5318":"#ffe177";ctx.font="800 10px system-ui";ctx.fillText(`☀ ${d.cost}`,x+56,y+50);ctx.fillStyle=sel?"#5f5318":"#91aa9b";ctx.font="800 9px system-ui";ctx.fillText(`${i+1}`,x+97,y+66);if(state.cooldowns[id]>0){const ratio=state.cooldowns[id]/d.cooldown;ctx.fillStyle="rgba(5,16,12,.72)";roundRect(x,y,CARD_W,CARD_H*ratio,13);ctx.fill();ctx.fillStyle="#d9e6dd";ctx.textAlign="center";ctx.font="800 13px system-ui";ctx.fillText(state.cooldowns[id].toFixed(1),x+CARD_W/2,y+43);}}}
+  function drawCards(){for(let i=0;i<state.loadout.length;i++){const id=state.loadout[i],d=Core.PLANTS[id],x=CARD_X+i*CARD_STEP,y=CARD_Y,sel=state.selected===id,ready=state.cooldowns[id]<=0&&state.sun>=d.cost;ctx.fillStyle=sel?"#eff5cf":ready?"rgba(20,69,48,.94)":"rgba(14,45,35,.9)";ctx.strokeStyle=sel?"#ffe064":"rgba(255,255,255,.16)";ctx.lineWidth=sel?3:1;roundRect(x,y,CARD_W,CARD_H,12);ctx.fill();ctx.stroke();ctx.textAlign="center";ctx.fillStyle=sel?"#183126":"#f4fff6";ctx.font=`900 ${d.short.length>3?9:10}px system-ui`;ctx.fillText(d.short,x+CARD_W/2,y+22,CARD_W-8);ctx.fillStyle=sel?"#315440":d.color;ctx.font="800 9px system-ui";ctx.fillText("文字植物",x+CARD_W/2,y+39,CARD_W-8);ctx.fillStyle=sel?"#5f5318":"#ffe177";ctx.font="800 9px system-ui";ctx.fillText(`☀ ${d.cost}`,x+CARD_W/2,y+56);ctx.fillStyle=sel?"#5f5318":"#91aa9b";ctx.font="800 8px system-ui";ctx.fillText(`${i+1}`,x+CARD_W/2,y+69);if(state.cooldowns[id]>0){const ratio=state.cooldowns[id]/d.cooldown;ctx.fillStyle="rgba(5,16,12,.72)";roundRect(x,y,CARD_W,CARD_H*ratio,12);ctx.fill();ctx.fillStyle="#d9e6dd";ctx.textAlign="center";ctx.font="800 11px system-ui";ctx.fillText(state.cooldowns[id].toFixed(1),x+CARD_W/2,y+43);}}}
   function drawFusionPreview(){if(!state.dragging)return;const pt=state.dragPoint;if(state.dragTarget){const c=cellCenter(state.dragTarget.row,state.dragTarget.col);ctx.strokeStyle=state.preview?.valid?(state.preview.authored?"#ffe271":"#9cec86"):"#ef6f61";ctx.lineWidth=5;ctx.setLineDash([8,5]);ctx.beginPath();ctx.arc(c.x,c.y,48,0,TAU);ctx.stroke();ctx.setLineDash([]);const w=330,h=76,x=Math.min(920,Math.max(290,pt.x-165)),y=Math.max(54,pt.y-105);ctx.fillStyle="rgba(8,28,21,.95)";roundRect(x,y,w,h,15);ctx.fill();ctx.strokeStyle=ctx.strokeStyle;ctx.lineWidth=2;ctx.stroke();ctx.fillStyle=state.preview?.valid?"#fff1a3":"#ffb0a7";ctx.font="900 18px system-ui";ctx.textAlign="left";ctx.fillText(state.preview?.valid?state.preview.name:state.preview?.reason,x+18,y+29);ctx.fillStyle="#bcd0c3";ctx.font="650 12px system-ui";ctx.fillText(state.preview?.valid?state.preview.note:"松手将取消",x+18,y+53);}else if(state.dragCell){const x=Math.min(1050,Math.max(290,pt.x-100)),y=Math.max(70,pt.y-78);ctx.fillStyle="rgba(8,28,21,.92)";roundRect(x,y,200,48,13);ctx.fill();ctx.fillStyle="#caffb4";ctx.font="850 14px system-ui";ctx.textAlign="center";ctx.fillText("松手移动到这里",x+100,y+29);}}
-  function drawTutorial(){if(state.mode!=="playing"||state.battleTime>28)return;let text="";if(!state.tutorial.card)text="① 选择下方一张植物卡";else if(!state.tutorial.planted)text="② 点击草坪空格种植";else if(state.plants.length>=2&&!state.tutorial.dragged)text="③ 按住一株植物，拖到另一株上";if(text){ctx.fillStyle="rgba(8,27,20,.86)";roundRect(440,560,400,44,13);ctx.fill();ctx.fillStyle="#eef6ed";ctx.textAlign="center";ctx.font="800 15px system-ui";ctx.fillText(text,640,588);}}
+  function drawTutorial(){if(state.mode!=="playing"||state.battleTime>28)return;let text="";if(!state.tutorial.card)text="① 选择上方一张植物卡";else if(!state.tutorial.planted)text="② 点击草坪空格种植";else if(state.plants.length>=2&&!state.tutorial.dragged)text="③ 按住一株植物，拖到另一株上";if(text){ctx.fillStyle="rgba(8,27,20,.86)";roundRect(440,560,400,44,13);ctx.fill();ctx.fillStyle="#eef6ed";ctx.textAlign="center";ctx.font="800 15px system-ui";ctx.fillText(text,640,588);}}
   function roundRect(x,y,w,h,r){ctx.beginPath();ctx.roundRect(x,y,w,h,r);}
 
   let last=performance.now();
