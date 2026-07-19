@@ -18,10 +18,10 @@ const makeToken = token => {
   return plant;
 };
 
-assert.equal(Object.keys(Core.PLANTS).length, 30, "the base roster should remain unchanged");
+assert.equal(Object.keys(Core.PLANTS).length, 48, "the expanded base roster should contain 48 plants");
 assert.equal(Object.keys(Catalog.FUSIONS).length, 200, "the new document contains 200 fusion plants");
-assert.equal(Object.keys(Catalog.RECIPES).length, 85, "the document yields 85 executable drag steps");
-assert.equal(Object.values(Catalog.FUSIONS).filter(plant => plant.available).length, 82, "82 plants are reachable from the current base roster");
+assert.equal(Object.keys(Catalog.RECIPES).length, 168, "documented and equivalent materials should yield 168 executable drag steps");
+assert.equal(Object.values(Catalog.FUSIONS).filter(plant => plant.available).length, 142, "142 plants are reachable from the expanded base roster");
 
 for (const [pair, fusionId] of Object.entries(Catalog.RECIPES)) {
   const [a, b] = pair.split("|");
@@ -50,6 +50,10 @@ assert.equal(Core.fuse(make("pea"), doublePea).ok, true);
 assert.equal(doublePea.displayName, "裂荚射手");
 assert.equal(Core.fuse(make("pea"), doublePea).ok, true);
 assert.equal(doublePea.displayName, "机枪射手");
+const cherryMachine = makeToken(Object.values(Catalog.FUSIONS).find(plant => plant.name === "机枪射手").id);
+assert.equal(Core.previewFusion(make("cherry"), cherryMachine).name, "樱桃机枪射手", "豌豆射手×4 must be recognized as 机枪射手");
+assert.equal(Core.fuse(make("cherry"), cherryMachine).ok, true);
+assert.equal(cherryMachine.displayName, "樱桃机枪射手");
 assert.equal(Core.previewFusion(make("frost"), make("pea")).valid, false, "non-document pairs must be rejected");
 assert.equal(Core.previewFusion(make("sun"), make("pea")).name, "豌豆向日葵");
 assert.equal(Catalog.FUSIONS.fusion001.name, "巨型坚果");
@@ -63,4 +67,4 @@ assert.deepEqual([ability("豌豆向日葵").sunEvery, ability("豌豆向日葵"
 assert.equal(ability("坚果射手").pierce, true);
 assert.equal(ability("超级樱桃射手").splash, true);
 
-console.log("core tests passed: 200 documented plants, 85 drag steps, 82 reachable multi-stage fusions");
+console.log("core tests passed: 48 bases, 200 documented plants, 168 semantic drag steps, 142 reachable fusions");

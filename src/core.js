@@ -36,8 +36,27 @@
     corn: { id: "corn", name: "玉米投手", short: "玉米", cost: 125, cooldown: 5, body: "shooter", gene: "stun", hp: 300, damage: 24, interval: 1.55, color: "#f2c94c" },
     garlic: { id: "garlic", name: "大蒜", short: "大蒜", cost: 50, cooldown: 7, body: "guard", gene: "weaken", hp: 1900, color: "#ede2bd" },
     umbrella: { id: "umbrella", name: "叶子保护伞", short: "保护伞", cost: 100, cooldown: 7, body: "guard", gene: "armor", hp: 2400, color: "#75bd68" },
-    melon: { id: "melon", name: "西瓜投手", short: "西瓜", cost: 175, cooldown: 7, body: "shooter", gene: "splash", hp: 300, damage: 44, interval: 2.1, color: "#67bf66" }
+    melon: { id: "melon", name: "西瓜投手", short: "西瓜", cost: 175, cooldown: 7, body: "shooter", gene: "splash", hp: 300, damage: 44, interval: 2.1, color: "#67bf66" },
+    scaredy: { id: "scaredy", name: "胆小菇", short: "胆小菇", cost: 25, cooldown: 4, body: "shooter", gene: "haste", hp: 300, damage: 20, interval: 1.5, color: "#a884c9" },
+    threepeater: { id: "threepeater", name: "三线射手", short: "三线", cost: 325, cooldown: 7.5, body: "shooter", gene: "multishot", hp: 300, damage: 20, interval: 1.5, color: "#70c95d" },
+    squash: { id: "squash", name: "窝瓜", short: "窝瓜", cost: 50, cooldown: 18, body: "burst", gene: "burst", hp: 300, damage: 900, interval: .7, color: "#88b950" },
+    kelp: { id: "kelp", name: "缠绕水草", short: "水草", cost: 25, cooldown: 18, body: "melee", gene: "devour", hp: 300, damage: 900, interval: 7, color: "#3e9f86" },
+    cattail: { id: "cattail", name: "猫尾草", short: "猫尾草", cost: 225, cooldown: 7.5, body: "shooter", gene: "crit", hp: 300, damage: 30, interval: 1.45, color: "#d58ab4" },
+    spikerock: { id: "spikerock", name: "地刺王", short: "地刺王", cost: 125, cooldown: 10, body: "trap", gene: "spike", hp: 900, damage: 50, interval: .65, color: "#566e52" },
+    seaShroom: { id: "seaShroom", name: "海蘑菇", short: "海蘑菇", cost: 0, cooldown: 5, body: "shooter", gene: "pierce", hp: 300, damage: 20, interval: 1.5, color: "#5ea7b8" },
+    flowerpot: { id: "flowerpot", name: "花盆", short: "花盆", cost: 25, cooldown: 4, body: "guard", gene: "armor", hp: 900, color: "#ba7547" },
+    marigold: { id: "marigold", name: "金盏花", short: "金盏花", cost: 50, cooldown: 6, body: "producer", gene: "producer", hp: 300, interval: 9, color: "#f1b94e" },
+    coffee: { id: "coffee", name: "咖啡豆", short: "咖啡豆", cost: 75, cooldown: 8, body: "support", gene: "haste", hp: 300, interval: 5, color: "#9d6646" },
+    steelLeaf: { id: "steelLeaf", name: "钢叶草", short: "钢叶草", cost: 125, cooldown: 6, body: "guard", gene: "armor", hp: 1500, damage: 32, interval: 1.4, color: "#7c9a83" },
+    spruce: { id: "spruce", name: "云杉弓手", short: "云杉", cost: 125, cooldown: 5, body: "shooter", gene: "pierce", hp: 300, damage: 34, interval: 1.5, color: "#4f9c67" },
+    spruceBallista: { id: "spruceBallista", name: "云杉弩炮", short: "弩炮", cost: 250, cooldown: 10, body: "shooter", gene: "splash", hp: 700, damage: 90, interval: 2.5, color: "#547c5f" },
+    aloe: { id: "aloe", name: "水滴芦荟", short: "芦荟", cost: 100, cooldown: 7, body: "producer", gene: "heal", hp: 500, interval: 8, color: "#59bca7" },
+    iceLotus: { id: "iceLotus", name: "寒冰莲花", short: "冰莲", cost: 150, cooldown: 10, body: "producer", gene: "deepfreeze", hp: 500, interval: 8, color: "#7dd9e8" },
+    pineFurnace: { id: "pineFurnace", name: "小松炉", short: "松炉", cost: 125, cooldown: 8, body: "support", gene: "ignite", hp: 900, damage: 24, interval: 4, color: "#d9854f" },
+    winterBamboo: { id: "winterBamboo", name: "冬笋路障", short: "冬笋", cost: 125, cooldown: 8, body: "guard", gene: "deepfreeze", hp: 2400, color: "#86bdc5" },
+    snowThorn: { id: "snowThorn", name: "雪棘草", short: "雪棘", cost: 100, cooldown: 6, body: "trap", gene: "frost", hp: 600, damage: 35, interval: .75, color: "#85cbd0" }
   };
+  const EXPANDED_BASES = new Set(["scaredy","threepeater","squash","kelp","cattail","spikerock","seaShroom","flowerpot","marigold","coffee","steelLeaf","spruce","spruceBallista","aloe","iceLotus","pineFurnace","winterBamboo","snowThorn"]);
 
   /* Previous free-form recipes removed: the supplied 65-plant document is now authoritative. */
   const LEGACY_RECIPES = {
@@ -127,7 +146,7 @@
   function createPlant(baseId, uid, row, col) {
     const d = PLANTS[baseId];
     return {
-      uid, baseId, fusionId: null, row, col, rank: 1, genes: [], materialIds: [], geneLevels: {}, displayName: d.name,
+      uid, baseId, fusionId: null, row, col, rank: 1, genes: EXPANDED_BASES.has(baseId) ? [d.gene] : [], materialIds: [], geneLevels: {}, displayName: d.name,
       hp: d.hp, maxHp: d.hp, shield: 0, timer: d.interval || 1, attackCount: 0,
       age: 0, hitFlash: 0, attackAnim: 0, bob: Math.random() * 6, fusions: 0, alive: true
     };
