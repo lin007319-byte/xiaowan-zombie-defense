@@ -20,7 +20,12 @@
     melon: { id: "melon", name: "西瓜投手", short: "西瓜", cost: 175, cooldown: 7, body: "shooter", gene: "splash", hp: 400, damage: 44, interval: 2.1, color: "#67bf66" },
     bamboo: { id: "bamboo", name: "竹筒连弩", short: "竹弩", cost: 150, cooldown: 6, body: "shooter", gene: "multishot", hp: 370, damage: 18, interval: 1.2, color: "#77c65d" },
     lotus: { id: "lotus", name: "治愈莲花", short: "莲花", cost: 100, cooldown: 6, body: "producer", gene: "heal", hp: 360, interval: 8, color: "#f39ac2" },
-    pumpkin: { id: "pumpkin", name: "南瓜堡垒", short: "南瓜", cost: 125, cooldown: 9, body: "guard", gene: "armor", hp: 3800, color: "#e8923b" }
+    pumpkin: { id: "pumpkin", name: "南瓜堡垒", short: "南瓜", cost: 125, cooldown: 9, body: "guard", gene: "armor", hp: 3800, color: "#e8923b" },
+    doom: { id: "doom", name: "毁灭菇", short: "毁灭菇", cost: 200, cooldown: 20, body: "burst", gene: "nova", hp: 320, damage: 1380, interval: 1.15, color: "#6f45d8" },
+    iceShroom: { id: "iceShroom", name: "寒冰菇", short: "寒冰菇", cost: 125, cooldown: 18, body: "burst", gene: "deepfreeze", hp: 320, damage: 60, interval: .9, color: "#83ddf4" },
+    star: { id: "star", name: "杨桃星炮", short: "杨桃", cost: 150, cooldown: 7, body: "shooter", gene: "radial", hp: 380, damage: 21, interval: 1.18, color: "#ffc94d" },
+    lantern: { id: "lantern", name: "路灯花", short: "路灯花", cost: 75, cooldown: 6, body: "producer", gene: "reveal", hp: 460, interval: 7.5, color: "#ffd35a" },
+    magnet: { id: "magnet", name: "磁力菇", short: "磁力菇", cost: 100, cooldown: 8, body: "support", gene: "magnet", hp: 430, interval: 6.5, color: "#ef5f57" }
   };
 
   const RECIPES = {
@@ -41,7 +46,12 @@
     "frost>corn": { name: "冰糖玉米", note: "定身同时附带寒冰减速", tone: "gold" },
     "pepper>nut": { name: "熔芯坚果", note: "坚果被击破时灼烧整条路线", tone: "gold" },
     "mushroom>sun": { name: "星辉花盘", note: "产阳光时射出穿透星弹", tone: "gold" },
-    "sun>mushroom": { name: "日光星菇", note: "快速星弹命中后生成微光阳光", tone: "gold" }
+    "sun>mushroom": { name: "日光星菇", note: "快速星弹命中后生成微光阳光", tone: "gold" },
+    "doom>pea": { name: "末日孢子炮", note: "每第十发产生暗能爆破", tone: "gold" },
+    "iceShroom>star": { name: "极光杨桃", note: "五向星弹附带深度冻结", tone: "gold" },
+    "star>lantern": { name: "星轨路灯", note: "产能时向多条路线发射光星", tone: "gold" },
+    "magnet>nut": { name: "磁甲坚果", note: "周期剥离附近僵尸的金属护甲", tone: "gold" },
+    "lantern>cactus": { name: "探照仙人掌", note: "光刺可击落飞行僵尸并提高暴击", tone: "gold" }
   };
 
   const RANK_DAMAGE = [1, 1.35, 1.85];
@@ -72,7 +82,7 @@
   }
 
   function geneName(id) {
-    return ({ shooter: "射击", producer: "产能", guard: "防御", frost: "寒冰", burst: "爆破", stun: "定身", fire: "灼烧", pierce: "穿透", crit: "暴击", weaken: "虚弱", haste: "加速", splash: "溅射", multishot: "连射", heal: "治疗", armor: "重甲" })[id] || id;
+    return ({ shooter: "射击", producer: "产能", guard: "防御", frost: "寒冰", burst: "爆破", stun: "定身", fire: "灼烧", pierce: "穿透", crit: "暴击", weaken: "虚弱", haste: "加速", splash: "溅射", multishot: "连射", heal: "治疗", armor: "重甲", nova: "湮灭", deepfreeze: "极寒", radial: "星散", reveal: "照明", magnet: "磁力" })[id] || id;
   }
 
   function fuse(donor, host) {
