@@ -24,7 +24,7 @@
   art.zombies.src="assets/zombies-atlas.png?v=2.5.0";
   art.expansion.src="assets/expansion-atlas.png?v=2.5.0";
   art.classic.src="assets/classic-plants-atlas.png?v=2.5.0";
-  art.traits.src="assets/fusion-traits-atlas-v1.png?v=2.7.0";
+  art.traits.src="assets/fusion-traits-atlas-v1.png?v=2.7.1";
   const qaDuration = Number(new URLSearchParams(location.search).get("testDuration"));
   const QA_MODE = Number.isFinite(qaDuration) && qaDuration >= 2 && qaDuration < 300;
   const WAVE_SECONDS = QA_MODE ? qaDuration : BASE_WAVE_SECONDS;
