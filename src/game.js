@@ -456,7 +456,7 @@
     return true;
   }
   function drawPlantBody(p,x,y,alpha=1){
-    const def=plantDef(p),bob=Math.sin(p.age*2.2+p.bob)*2,attack=Math.sin(Math.min(1,(p.attackAnim||0)/.72)*Math.PI),name=p.fusionId?p.displayName:(def.short||def.name),sub=[p.fusionId?"文件配方":"",p.shield>0?"护盾":""].filter(Boolean).join(" · ");
+    const def=plantDef(p),bob=Math.sin(p.age*2.2+p.bob)*2,attack=Math.sin(Math.min(1,(p.attackAnim||0)/.72)*Math.PI),name=p.fusionId?p.displayName:(def.short||def.name),sub=[p.fusionId?(def.abilities?.ultimate?"究极配方":"文件配方"):"",p.shield>0?"护盾":""].filter(Boolean).join(" · ");
     if(p.baseId==="star"||p.baseId==="gloom"){drawRadialPlant(p,x,y+bob-5*attack,alpha,name,sub,attack);return;}
     drawTextEntity(`我是${name}`,x+(def.body==="shooter"?-5:0)*attack,y+bob-5*attack,p.hitFlash>0?"#ffffff":def.color,alpha,sub,92);
   }
@@ -513,11 +513,11 @@
   const escapeText=value=>String(value??"").replace(/[&<>"']/g,char=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"})[char]);
   const almanacPlants=[
     ...TYPES.map(id=>{const d=Core.PLANTS[id];return{kind:"base",id,name:d.name,color:d.color,sigil:CARD_SIGILS[id]||"●",available:true,recipe:"基础植物",hp:d.hp,damage:d.damage||0,interval:d.interval||0,description:`阳光消耗：${d.cost}；冷却：${d.cooldown}秒；类型：${Core.geneName(d.gene)}`} }),
-    ...Object.values(Core.FUSIONS).map((d,index)=>({kind:"fusion",id:d.id,name:d.name,color:d.color,sigil:["✦","◆","✹","⬢","●","◉"][index%6],available:Boolean(d.available),recipe:d.recipe||d.materials.join(" + "),hp:d.hp,damage:d.damage||0,interval:d.interval||0,description:d.description}))
+    ...Object.values(Core.FUSIONS).map((d,index)=>({kind:"fusion",ultimate:Boolean(d.abilities?.ultimate),id:d.id,name:d.name,color:d.color,sigil:d.abilities?.ultimate?"★":["✦","◆","✹","⬢","●","◉"][index%6],available:Boolean(d.available),recipe:d.recipe||d.materials.join(" + "),hp:d.hp,damage:d.damage||0,interval:d.interval||0,description:d.description}))
   ];
   function almanacCard(item){
-    const damage=item.damage?item.damage:"—",interval=item.interval?`${item.interval}秒`:"—",badge=item.kind==="base"?"基础":item.available?"可融合":"待补材料";
-    return `<article class="almanac-card${item.available?"":" unavailable"}" role="listitem" style="--card-color:${escapeText(item.color)}" data-kind="${item.kind}"><span class="card-badge${item.available?"":" locked"}">${badge}</span><div class="card-top"><span class="card-emblem">${escapeText(item.sigil)}</span><span class="card-title"><b>${escapeText(item.name)}</b><small>${item.kind==="base"?"基础植物卡":`融合植物卡 · ${escapeText(item.id.replace("fusion","#"))}`}</small></span></div><div class="card-recipe">${item.kind==="base"?"直接选择植物卡种植":`融合配方：${escapeText(item.recipe)}`}</div><div class="card-stats"><span>耐久<b>${escapeText(item.hp)}</b></span><span>伤害<b>${escapeText(damage)}</b></span><span>间隔<b>${escapeText(interval)}</b></span></div><p class="card-desc">${escapeText(item.description)}</p></article>`;
+    const damage=item.damage?item.damage:"—",interval=item.interval?`${item.interval}秒`:"—",badge=item.kind==="base"?"基础":item.ultimate?"究极":item.available?"可融合":"待补材料";
+    return `<article class="almanac-card${item.available?"":" unavailable"}" role="listitem" style="--card-color:${escapeText(item.color)}" data-kind="${item.kind}"><span class="card-badge${item.available?"":" locked"}">${badge}</span><div class="card-top"><span class="card-emblem">${escapeText(item.sigil)}</span><span class="card-title"><b>${escapeText(item.name)}</b><small>${item.kind==="base"?"基础植物卡":item.ultimate?`究极植物卡 · ${escapeText(item.id.replace("ultimate","U-"))}`:`融合植物卡 · ${escapeText(item.id.replace("fusion","#"))}`}</small></span></div><div class="card-recipe">${item.kind==="base"?"直接选择植物卡种植":`融合配方：${escapeText(item.recipe)}`}</div><div class="card-stats"><span>耐久<b>${escapeText(item.hp)}</b></span><span>伤害<b>${escapeText(damage)}</b></span><span>间隔<b>${escapeText(interval)}</b></span></div><p class="card-desc">${escapeText(item.description)}</p></article>`;
   }
   function renderAlmanac(){
     const query=almanacSearch.value.trim().toLowerCase();

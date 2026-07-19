@@ -19,9 +19,14 @@ const makeToken = token => {
 };
 
 assert.equal(Object.keys(Core.PLANTS).length, 48, "the expanded base roster should contain 48 plants");
-assert.equal(Object.keys(Catalog.FUSIONS).length, 200, "the new document contains 200 fusion plants");
-assert.equal(Object.keys(Catalog.RECIPES).length, 168, "documented and equivalent materials should yield 168 executable drag steps");
-assert.equal(Object.values(Catalog.FUSIONS).filter(plant => plant.available).length, 142, "142 plants are reachable from the expanded base roster");
+assert.equal(Object.keys(Catalog.FUSIONS).length, 301, "the documents contain 200 fusion plants and 101 ultimate plants");
+assert.equal(Object.keys(Catalog.RECIPES).length, 206, "documented and equivalent materials should yield 206 executable drag steps");
+assert.equal(Object.values(Catalog.FUSIONS).filter(plant => plant.available).length, 180, "180 plants are reachable from the expanded roster");
+const ultimatePlants = Object.values(Catalog.FUSIONS).filter(plant => plant.abilities?.ultimate);
+assert.equal(ultimatePlants.length, 101, "the PDF should contribute all 101 ultimate plants");
+assert.equal(ultimatePlants.filter(plant => plant.available).length, 38, "38 ultimate plants have complete executable recipes");
+assert.ok(ultimatePlants.every(plant => plant.source?.startsWith("https://wiki.biligame.com/pvzrh/")), "every ultimate card should preserve its Wiki source");
+assert.ok(ultimatePlants.every(plant => plant.description), "every ultimate card should include an almanac description");
 assert.equal(Core.PLANTS.fume.interval, 1.45, "大喷菇应每 1.45 秒喷射一次毒气");
 assert.equal(Core.PLANTS.fume.damage, 24, "大喷菇每次毒气伤害应为 24");
 assert.equal(Core.PLANTS.gloom.damage, 28, "忧郁菇每一喷伤害应为 28");
@@ -61,6 +66,11 @@ assert.equal(Core.previewFusion(make("frost"), make("pea")).valid, false, "non-d
 assert.equal(Core.previewFusion(make("sun"), make("pea")).name, "豌豆向日葵");
 assert.equal(Catalog.FUSIONS.fusion001.name, "巨型坚果");
 assert.equal(Catalog.FUSIONS.fusion200.name, "星辉忧郁菇");
+assert.equal(Catalog.FUSIONS.ultimate001.name, "魅帝菇");
+assert.equal(Catalog.FUSIONS.ultimate002.name, "究极樱桃射手");
+assert.equal(Catalog.FUSIONS.ultimate101.name, "末影南瓜箱子");
+assert.equal(Catalog.FUSIONS.ultimate002.abilities.shotCount, 4);
+assert.equal(Catalog.FUSIONS.ultimate002.damage, 300);
 
 const ability = name => Object.values(Catalog.FUSIONS).find(plant => plant.name === name).abilities;
 assert.equal(ability("双发射手").shotCount, 2);
@@ -70,4 +80,4 @@ assert.deepEqual([ability("豌豆向日葵").sunEvery, ability("豌豆向日葵"
 assert.equal(ability("坚果射手").pierce, true);
 assert.equal(ability("超级樱桃射手").splash, true);
 
-console.log("core tests passed: 48 bases, 200 documented plants, 168 semantic drag steps, 142 reachable fusions");
+console.log("core tests passed: 48 bases, 301 documented fusion/ultimate plants, 206 semantic drag steps, 180 reachable fusions");
