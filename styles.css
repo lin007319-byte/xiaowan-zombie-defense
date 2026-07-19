@@ -72,6 +72,45 @@ h2 { font-size: clamp(28px, 3.2vw, 46px); }
 .mode-card b { font-size: 18px; }
 .mode-card small { margin-top: 6px; color: #cad9d0; font-size: 11px; }
 .mode-card em { margin-top: 4px; color: #9db6a7; font-size: 10px; font-style: normal; }
+.start-links { display: grid; grid-template-columns: 1.25fr 1fr; align-items: center; gap: 8px; margin-top: 12px; }
+.start-links .text-btn { margin: 0; }
+.almanac-entry-btn { display: grid; grid-template-columns: 34px 1fr; grid-template-rows: auto auto; column-gap: 10px; align-items: center; padding: 9px 13px; border: 1px solid rgba(255,217,108,.3); border-radius: 14px; background: linear-gradient(135deg, rgba(126,91,38,.58), rgba(41,68,45,.8)); cursor: pointer; text-align: left; transition: .2s; }
+.almanac-entry-btn:hover { transform: translateY(-2px); border-color: var(--gold); box-shadow: 0 10px 25px rgba(0,0,0,.25); }
+.almanac-entry-btn > span { grid-row: 1 / 3; display: grid; place-items: center; width: 32px; height: 38px; border-radius: 7px 11px 11px 7px; background: #e6c273; color: #49351d; box-shadow: inset 4px 0 rgba(88,62,28,.2); font-size: 18px; }
+.almanac-entry-btn b { font-size: 13px; }
+.almanac-entry-btn small { color: #d8c995; font-size: 9px; }
+.almanac-panel { width: min(1140px, calc(100% - 24px)); height: calc(100% - 24px); padding: 20px 24px 18px; display: flex; flex-direction: column; overflow: hidden; }
+.almanac-heading { flex: 0 0 auto; display: flex; align-items: flex-start; justify-content: space-between; gap: 18px; }
+.almanac-heading h2 { font-size: clamp(25px, 3vw, 40px); }
+.almanac-heading p { margin: 5px 0 0; font-size: 11px; line-height: 1.4; }
+.almanac-heading .close-btn { position: static; flex: 0 0 auto; }
+.almanac-tools { flex: 0 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 12px 0 7px; }
+.almanac-tabs { display: flex; flex-wrap: wrap; gap: 5px; }
+.almanac-tabs button { padding: 7px 11px; border: 1px solid var(--line); border-radius: 999px; background: rgba(255,255,255,.045); color: #bcd0c2; cursor: pointer; font-size: 10px; font-weight: 800; }
+.almanac-tabs button b { margin-left: 3px; color: #ffe17a; }
+.almanac-tabs button.active { border-color: rgba(201,242,107,.55); background: rgba(117,213,110,.15); color: #f4fff1; }
+.almanac-search { display: flex; align-items: center; width: min(250px, 35%); padding: 0 11px; border: 1px solid var(--line); border-radius: 12px; background: rgba(255,255,255,.055); color: var(--muted); }
+.almanac-search input { width: 100%; min-width: 0; padding: 9px 7px; border: 0; outline: 0; background: transparent; color: white; font: inherit; font-size: 11px; }
+.almanac-search input::placeholder { color: #789184; }
+.almanac-count { flex: 0 0 auto; min-height: 17px; color: #91aa9b; font-size: 10px; }
+.almanac-grid { flex: 1 1 auto; min-height: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); align-content: start; gap: 10px; padding: 3px 6px 8px 3px; overflow-y: auto; scrollbar-color: rgba(201,242,107,.45) transparent; }
+.almanac-card { --card-color: #75d56e; position: relative; min-height: 210px; padding: 12px; border: 1px solid color-mix(in srgb, var(--card-color) 45%, rgba(255,255,255,.1)); border-radius: 15px; background: linear-gradient(155deg, color-mix(in srgb, var(--card-color) 15%, rgba(19,54,40,.97)), rgba(8,28,21,.98) 50%); overflow: hidden; box-shadow: inset 0 1px rgba(255,255,255,.05); }
+.almanac-card::after { content: ""; position: absolute; width: 110px; height: 110px; right: -46px; top: -46px; border-radius: 50%; background: var(--card-color); opacity: .09; pointer-events: none; }
+.almanac-card.unavailable { filter: saturate(.72); }
+.card-top { display: flex; align-items: center; gap: 9px; }
+.card-emblem { flex: 0 0 auto; display: grid; place-items: center; width: 39px; height: 47px; border-radius: 50% 50% 46% 54%; border: 2px solid rgba(255,255,255,.22); background: var(--card-color); color: #153225; box-shadow: inset 0 -9px rgba(0,0,0,.1), 0 6px 15px rgba(0,0,0,.22); font-size: 18px; font-weight: 950; }
+.card-title { min-width: 0; }
+.card-title b, .card-title small { display: block; }
+.card-title b { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-size: 14px; }
+.card-title small { margin-top: 3px; color: #aac0b3; font-size: 9px; }
+.card-badge { position: absolute; right: 10px; top: 10px; padding: 3px 6px; border-radius: 999px; background: rgba(201,242,107,.13); color: #dfffa6; font-size: 8px; font-weight: 900; }
+.card-badge.locked { background: rgba(255,255,255,.07); color: #94a59b; }
+.card-recipe { margin: 10px 0 8px; padding: 7px 8px; border-radius: 9px; border: 1px solid rgba(255,217,108,.15); background: rgba(255,217,108,.06); color: #ffe291; font-size: 9px; line-height: 1.45; }
+.card-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; margin-bottom: 8px; }
+.card-stats span { padding: 6px 3px; border-radius: 8px; background: rgba(255,255,255,.045); text-align: center; color: #98afa2; font-size: 8px; }
+.card-stats b { display: block; margin-top: 2px; color: #f3fff4; font-size: 10px; }
+.card-desc { margin: 0 !important; color: #b8c9bf !important; font-size: 9px !important; line-height: 1.55 !important; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 4; overflow: hidden; }
+.almanac-empty { grid-column: 1 / -1; padding: 50px 20px; text-align: center; color: var(--muted); }
 .select-panel { width: min(1040px, calc(100% - 30px)); padding: 26px 30px; }
 .select-heading { display: flex; align-items: end; justify-content: space-between; gap: 20px; }
 .select-heading h2 { font-size: clamp(26px, 3vw, 42px); }
@@ -128,6 +167,33 @@ footer { color: #7f998a; font-size: 11px; padding: 12px 2px 0; }
   .mode-card em { display: none; }
   .mode-card::after { right: 8px; bottom: 7px; }
   .start-panel .text-btn { margin-top: 2px; padding: 3px; font-size: 10px; }
+  .start-links { margin-top: 4px; gap: 4px; }
+  .almanac-entry-btn { padding: 4px 7px; border-radius: 8px; }
+  .almanac-entry-btn > span { width: 22px; height: 26px; font-size: 12px; }
+  .almanac-entry-btn b { font-size: 9px; }
+  .almanac-entry-btn small { font-size: 7px; }
+  .almanac-panel { width: calc(100% - 10px); height: calc(100% - 10px); padding: 8px; }
+  .almanac-heading .eyebrow, .almanac-heading p { display: none; }
+  .almanac-heading h2 { font-size: 20px; }
+  .almanac-heading .close-btn { width: 28px; height: 28px; font-size: 18px; }
+  .almanac-tools { margin: 5px 0; gap: 5px; }
+  .almanac-tabs { gap: 3px; }
+  .almanac-tabs button { padding: 4px 6px; font-size: 7px; }
+  .almanac-search { width: 28%; padding: 0 5px; border-radius: 7px; }
+  .almanac-search input { padding: 5px 3px; font-size: 8px; }
+  .almanac-count { min-height: 11px; font-size: 7px; }
+  .almanac-grid { grid-template-columns: repeat(4, 1fr); gap: 5px; }
+  .almanac-card { min-height: 145px; padding: 7px; border-radius: 9px; }
+  .card-top { gap: 5px; }
+  .card-emblem { width: 25px; height: 30px; font-size: 11px; }
+  .card-title b { font-size: 9px; }
+  .card-title small, .card-badge { font-size: 6px; }
+  .card-badge { right: 5px; top: 5px; padding: 2px 4px; }
+  .card-recipe { margin: 5px 0; padding: 4px; font-size: 6px; }
+  .card-stats { gap: 2px; margin-bottom: 4px; }
+  .card-stats span { padding: 3px 1px; font-size: 6px; }
+  .card-stats b { font-size: 7px; }
+  .card-desc { font-size: 6px !important; line-height: 1.35 !important; -webkit-line-clamp: 3; }
   .select-panel { padding: 8px 10px; }
   .select-heading h2 { font-size: 21px; }
   .select-heading .eyebrow { margin-bottom: 3px; font-size: 9px; }

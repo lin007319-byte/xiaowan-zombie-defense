@@ -489,12 +489,32 @@
   const picker=document.getElementById("plantPicker"),pickCount=document.getElementById("pickCount"),confirmPlantsBtn=document.getElementById("confirmPlantsBtn");
   function buildPlantPicker(){picker.innerHTML=TYPES.map(id=>{const d=Core.PLANTS[id];return `<button class="plant-pick" type="button" data-plant-id="${id}" style="--plant-color:${d.color}" aria-pressed="false"><span class="pick-sigil">${CARD_SIGILS[id]||"●"}</span><span class="pick-name"><b>${d.name}</b><small>☀ ${d.cost} · ${Core.geneName(d.gene)}</small></span><span class="pick-order"></span></button>`;}).join("");renderPicker();}
   function renderPicker(){for(const button of picker.querySelectorAll("[data-plant-id]")){const index=pendingLoadout.indexOf(button.dataset.plantId),selected=index>=0;button.classList.toggle("selected",selected);button.setAttribute("aria-pressed",String(selected));button.querySelector(".pick-order").textContent=selected?String(index+1):"";}pickCount.textContent=String(pendingLoadout.length);const count=pendingLoadout.length;confirmPlantsBtn.disabled=count===0;confirmPlantsBtn.textContent=count===0?"请至少选择 1 种":`带 ${count} 种植物开始 →`;}
+  const almanacGrid=document.getElementById("almanacGrid"),almanacSearch=document.getElementById("almanacSearch"),almanacCount=document.getElementById("almanacCount");
+  let almanacFilter="all";
+  const escapeText=value=>String(value??"").replace(/[&<>"']/g,char=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"})[char]);
+  const almanacPlants=[
+    ...TYPES.map(id=>{const d=Core.PLANTS[id];return{kind:"base",id,name:d.name,color:d.color,sigil:CARD_SIGILS[id]||"●",available:true,recipe:"基础植物",hp:d.hp,damage:d.damage||0,interval:d.interval||0,description:`阳光消耗：${d.cost}；冷却：${d.cooldown}秒；类型：${Core.geneName(d.gene)}`} }),
+    ...Object.values(Core.FUSIONS).map((d,index)=>({kind:"fusion",id:d.id,name:d.name,color:d.color,sigil:["✦","◆","✹","⬢","●","◉"][index%6],available:Boolean(d.available),recipe:d.materials.join(" + "),hp:d.hp,damage:d.damage||0,interval:d.interval||0,description:d.description}))
+  ];
+  function almanacCard(item){
+    const damage=item.damage?item.damage:"—",interval=item.interval?`${item.interval}秒`:"—",badge=item.kind==="base"?"基础":item.available?"可融合":"待补材料";
+    return `<article class="almanac-card${item.available?"":" unavailable"}" role="listitem" style="--card-color:${escapeText(item.color)}" data-kind="${item.kind}"><span class="card-badge${item.available?"":" locked"}">${badge}</span><div class="card-top"><span class="card-emblem">${escapeText(item.sigil)}</span><span class="card-title"><b>${escapeText(item.name)}</b><small>${item.kind==="base"?"基础植物卡":`融合植物卡 · ${escapeText(item.id.replace("fusion","#"))}`}</small></span></div><div class="card-recipe">${item.kind==="base"?"直接选择植物卡种植":`融合配方：${escapeText(item.recipe)}`}</div><div class="card-stats"><span>耐久<b>${escapeText(item.hp)}</b></span><span>伤害<b>${escapeText(damage)}</b></span><span>间隔<b>${escapeText(interval)}</b></span></div><p class="card-desc">${escapeText(item.description)}</p></article>`;
+  }
+  function renderAlmanac(){
+    const query=almanacSearch.value.trim().toLowerCase();
+    const visible=almanacPlants.filter(item=>(almanacFilter==="all"||item.kind===almanacFilter||(almanacFilter==="available"&&item.kind==="fusion"&&item.available))&&(!query||`${item.name} ${item.recipe} ${item.description}`.toLowerCase().includes(query)));
+    almanacGrid.innerHTML=visible.length?visible.map(almanacCard).join(""):`<div class="almanac-empty">没有找到符合条件的植物卡片</div>`;
+    almanacCount.textContent=`显示 ${visible.length} / ${almanacPlants.length} 张植物卡片`;
+  }
+  document.querySelectorAll("[data-almanac-filter]").forEach(button=>button.onclick=()=>{almanacFilter=button.dataset.almanacFilter;document.querySelectorAll("[data-almanac-filter]").forEach(tab=>tab.classList.toggle("active",tab===button));renderAlmanac();sfx("select");});
+  almanacSearch.addEventListener("input",renderAlmanac);
   picker.addEventListener("click",e=>{const button=e.target.closest("[data-plant-id]");if(!button)return;const id=button.dataset.plantId,index=pendingLoadout.indexOf(id);if(index>=0)pendingLoadout.splice(index,1);else if(pendingLoadout.length<LOADOUT_SIZE)pendingLoadout.push(id);else{toast("每局最多选择 10 种植物");return;}sfx("select");renderPicker();});
   document.querySelectorAll("[data-game-mode]").forEach(button=>button.onclick=()=>{initAudio();pendingMode=button.dataset.gameMode;pendingLoadout=[];document.getElementById("selectEyebrow").textContent=`${pendingMode==="classic"?"经典模式 · 十波通关":"塔防模式 · 无限防守"} · 出战准备`;renderPicker();showPanel("selectPanel");sfx("select");});
   document.getElementById("recommendBtn").onclick=()=>{pendingLoadout=[...RECOMMENDED_LOADOUT];renderPicker();sfx("select");};
   document.getElementById("backToModesBtn").onclick=()=>showPanel("startPanel");
   confirmPlantsBtn.onclick=()=>{if(pendingLoadout.length<1||pendingLoadout.length>LOADOUT_SIZE)return;state.gameMode=pendingMode;state.loadout=[...pendingLoadout];reset();};
   document.getElementById("howBtn").onclick=()=>showPanel("howPanel");
+  document.getElementById("almanacBtn").onclick=()=>{renderAlmanac();showPanel("almanacPanel");sfx("select");};
   document.querySelectorAll("[data-close]").forEach(b=>b.onclick=()=>state.mode==="menu"?showPanel("startPanel"):hidePanels());
   document.getElementById("pauseBtn").onclick=togglePause;document.getElementById("resumeBtn").onclick=togglePause;
   document.getElementById("restartBtn").onclick=reset;document.getElementById("restartBtnPause").onclick=reset;
@@ -505,7 +525,7 @@
   addEventListener("keyup",e=>{if(e.code==="F3"){e.preventDefault();if(state.timeStop){state.timeStop=false;sfx("timeResume");}}});
   addEventListener("blur",()=>{state.timeStop=false;if(state.mode==="playing"&&!state.paused)togglePause();});
 
-  buildPlantPicker();showPanel("startPanel");
+  buildPlantPicker();renderAlmanac();showPanel("startPanel");
 
   fetch(new URL("api/status",location.href),{cache:"no-store"}).then(r=>r.ok?r.json():null).then(info=>{
     if(!info?.ok)return;

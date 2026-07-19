@@ -65,8 +65,15 @@ assert.match(game, /function updateInheritedTraits\(p,dt,def,hasEnemy\)/);
 assert.match(game, /p\.genes\.includes\("devour"\)/);
 assert.match(game, /p\.genes\.includes\("ignite"\)/);
 assert.match(game, /p\.genes\.includes\("gust"\)/);
-assert.match(html, /src\/fusion-catalog\.js\?v=3\.0\.0/);
+assert.match(html, /src\/fusion-catalog\.js\?v=3\.1\.0/);
 assert.match(html, /65 种文件融合植物/);
 assert.match(game, /const plantDef = plant => Core\.plantDef\(plant\)/);
+assert.match(html, /id="almanacBtn"/);
+assert.match(html, /id="almanacPanel"/);
+assert.match(html, /id="almanacGrid"/);
+assert.match(game, /const almanacPlants=\[/);
+assert.match(game, /\.\.\.Object\.values\(Core\.FUSIONS\)/);
+assert.match(game, /function renderAlmanac\(\)/);
+assert.match(game, /almanacPlants\.length/);
 
 console.log(`content tests passed: text rendering + classic/tower modes + 10-card loadout + ${zombieIds.length} zombie types`);
