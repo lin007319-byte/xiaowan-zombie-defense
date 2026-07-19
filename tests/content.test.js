@@ -10,6 +10,7 @@ assert.match(game, /const SPAWN_GAPS = \[9\.8,9\.2,8\.6,8,7\.4,6\.8,6\.2,5\.7,5\
 assert.match(game, /state\.zombies\.length<48/);
 assert.match(game, /Math\.max\(2\.7,base\*endless\)/);
 assert.match(game, /function drawTextEntity\(/);
+assert.match(game, /garden-background-v1\.webp/);
 assert.match(game, /const ZOMBIE_TEXT=/);
 assert.match(game, /我是小推车/);
 assert.match(game, /我是阳光/);
@@ -40,7 +41,7 @@ assert.match(game, /e\.code==="F3"/);
 assert.match(game, /state\.timeScale=state\.timeStop \? \.08 : 1/);
 assert.match(game, /function chomp\(/);
 assert.match(game, /function spikeAttack\(/);
-assert.doesNotMatch(game, /art\.\w+\.src=/);
+assert.doesNotMatch(game, /art\.(?:plants|zombies|expansion|classic|traits)\.src=/);
 assert.match(game, /drawTextEntity\(`我是\$\{name\}`/);
 assert.match(game, /drawTextEntity\(ZOMBIE_TEXT\[z\.kind\]/);
 assert.match(game, /function updateInheritedTraits\(p,dt,def,hasEnemy\)/);
