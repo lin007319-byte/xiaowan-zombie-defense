@@ -62,6 +62,39 @@ h2 { font-size: clamp(28px, 3.2vw, 46px); }
 .primary-btn b { float: right; font-size: 18px; }
 .text-btn { display: block; width: 100%; margin-top: 12px; border: 0; background: transparent; color: #bdd0c5; cursor: pointer; padding: 8px; }
 .text-btn:hover { color: white; }
+.mode-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 22px; }
+.mode-card { position: relative; min-height: 138px; padding: 18px; border: 1px solid rgba(215,255,220,.18); border-radius: 18px; text-align: left; cursor: pointer; background: linear-gradient(145deg, rgba(40,94,66,.82), rgba(17,50,37,.96)); transition: .2s ease; overflow: hidden; }
+.mode-card::after { content: "→"; position: absolute; right: 16px; bottom: 13px; color: var(--lime); font-weight: 900; }
+.mode-card:hover { transform: translateY(-3px); border-color: rgba(201,242,107,.55); box-shadow: 0 14px 30px rgba(0,0,0,.24); }
+.mode-card:nth-child(2) { background: linear-gradient(145deg, rgba(86,72,40,.88), rgba(42,37,23,.97)); }
+.mode-icon { display: grid; place-items: center; width: 35px; height: 35px; margin-bottom: 11px; border-radius: 11px; background: rgba(201,242,107,.13); color: var(--gold); font-size: 20px; }
+.mode-card b, .mode-card small, .mode-card em { display: block; }
+.mode-card b { font-size: 18px; }
+.mode-card small { margin-top: 6px; color: #cad9d0; font-size: 11px; }
+.mode-card em { margin-top: 4px; color: #9db6a7; font-size: 10px; font-style: normal; }
+.select-panel { width: min(1040px, calc(100% - 30px)); padding: 26px 30px; }
+.select-heading { display: flex; align-items: end; justify-content: space-between; gap: 20px; }
+.select-heading h2 { font-size: clamp(26px, 3vw, 42px); }
+.pick-counter { display: flex; align-items: baseline; color: var(--gold); }
+.pick-counter b { font-size: 42px; line-height: 1; }
+.pick-counter span { color: var(--muted); font-weight: 800; }
+.select-copy { margin: 8px 0 14px !important; font-size: 12px !important; }
+.plant-picker { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; max-height: min(350px, 49vh); padding: 3px 6px 3px 3px; overflow-y: auto; scrollbar-color: rgba(201,242,107,.45) transparent; }
+.plant-pick { position: relative; display: grid; grid-template-columns: 42px 1fr; align-items: center; min-width: 0; padding: 8px; border: 1px solid rgba(222,255,228,.13); border-radius: 13px; background: rgba(255,255,255,.045); cursor: pointer; text-align: left; transition: .16s; }
+.plant-pick:hover { background: rgba(255,255,255,.09); transform: translateY(-1px); }
+.plant-pick.selected { border-color: var(--gold); background: rgba(255,217,108,.13); box-shadow: inset 0 0 0 1px rgba(255,217,108,.2); }
+.pick-sigil { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 50% 50% 46% 54%; color: #10271c; background: var(--plant-color); box-shadow: inset 0 -5px 10px rgba(0,0,0,.16), 0 4px 11px rgba(0,0,0,.2); font-weight: 950; font-size: 17px; }
+.pick-name { min-width: 0; }
+.pick-name b, .pick-name small { display: block; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.pick-name b { font-size: 12px; }
+.pick-name small { margin-top: 3px; color: #ffe077; font-size: 9px; }
+.pick-order { display: none; position: absolute; right: 5px; top: 5px; width: 20px; height: 20px; place-items: center; border-radius: 50%; color: #173127; background: var(--gold); font-size: 10px; font-weight: 950; }
+.plant-pick.selected .pick-order { display: grid; }
+.select-actions { display: grid; grid-template-columns: 170px 150px 1fr; gap: 10px; margin-top: 16px; }
+.select-actions .primary-btn { padding: 12px 18px; }
+.secondary-btn { border: 1px solid var(--line); border-radius: 13px; background: rgba(255,255,255,.06); cursor: pointer; font-weight: 750; }
+.secondary-btn:hover { background: rgba(255,255,255,.11); }
+.primary-btn:disabled { cursor: not-allowed; filter: grayscale(.75); opacity: .55; transform: none; }
 .close-btn { position: absolute; right: 18px; top: 18px; width: 36px; height: 36px; border-radius: 50%; font-size: 24px; line-height: 1; }
 .how-panel ol { list-style: none; padding: 0; margin: 24px 0; display: grid; gap: 13px; counter-reset: guide; }
 .how-panel li { counter-increment: guide; display: grid; grid-template-columns: 34px 120px 1fr; align-items: center; gap: 10px; color: #c5d6cc; }
@@ -84,7 +117,41 @@ footer { color: #7f998a; font-size: 11px; padding: 12px 2px 0; }
   .game-frame { border-radius: 15px; }
   .start-panel { left: 50%; translate: -50% -50%; width: calc(100% - 28px); }
   .start-panel p, .feature-row { display: none; }
+  .panel { padding: 12px; }
+  .start-panel h1 { font-size: 27px; }
+  .start-panel .eyebrow { margin-bottom: 5px; }
+  .mode-grid { margin-top: 8px; gap: 7px; }
+  .mode-card { min-height: 82px; padding: 8px; }
+  .mode-icon { margin-bottom: 6px; }
+  .mode-card b { font-size: 14px; }
+  .mode-card small { margin-top: 3px; font-size: 8px; }
+  .mode-card em { display: none; }
+  .mode-card::after { right: 8px; bottom: 7px; }
+  .start-panel .text-btn { margin-top: 2px; padding: 3px; font-size: 10px; }
+  .select-panel { padding: 8px 10px; }
+  .select-heading h2 { font-size: 21px; }
+  .select-heading .eyebrow { margin-bottom: 3px; font-size: 9px; }
+  .pick-counter b { font-size: 27px; }
+  .select-copy { display: none; }
+  .plant-picker { grid-template-columns: repeat(5, 1fr); gap: 4px; max-height: 98px; margin-top: 5px; }
+  .plant-pick { grid-template-columns: 24px 1fr; padding: 4px; border-radius: 8px; }
+  .pick-sigil { width: 26px; height: 26px; font-size: 13px; }
+  .pick-name b { font-size: 9px; }
+  .pick-name small { font-size: 7px; }
+  .select-actions { grid-template-columns: 1fr 1fr 2fr; gap: 5px; margin-top: 7px; }
+  .select-actions button, .select-actions .primary-btn { grid-column: auto; min-height: 30px; padding: 5px; font-size: 9px; }
   .how-panel li { grid-template-columns: 30px 90px 1fr; font-size: 12px; }
   footer { justify-content: center; }
+}
+@media (max-height: 600px) {
+  .app-shell { padding-top: 4px; }
+  .topline, footer { display: none; }
+  .game-frame { max-height: 100vh; margin: auto; }
+  .start-panel { left: 50%; translate: -50% -50%; width: min(620px, calc(100% - 14px)); padding: 10px 14px; }
+  .start-panel p, .start-panel .feature-row { display: none; }
+  .start-panel h1 { font-size: 26px; }
+  .mode-grid { margin-top: 7px; }
+  .mode-card { min-height: 78px; padding: 8px 10px; }
+  .mode-icon { width: 24px; height: 24px; margin-bottom: 4px; font-size: 14px; }
 }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition-duration: .01ms !important; } }

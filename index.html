@@ -7,14 +7,14 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
-  <title>小万大站僵尸 · v2.4 时停风暴版</title>
+  <title>小万大站僵尸 · v2.5 双模式选卡版</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%2310271f'/%3E%3Cpath d='M16 38C18 18 39 12 51 14c0 18-10 34-31 30 8-8 16-14 25-20-12 4-20 10-29 20z' fill='%23c9f26b'/%3E%3C/svg%3E">
-  <link rel="stylesheet" href="styles.css?v=2.4.0">
+  <link rel="stylesheet" href="styles.css?v=2.5.0">
 </head>
 <body>
   <main class="app-shell">
     <header class="topline">
-      <div class="brand"><span class="brand-seed">✦</span> 小万大站僵尸 <small>TIME FREEZE v2.4</small></div>
+      <div class="brand"><span class="brand-seed">✦</span> 小万大站僵尸 <small>DUAL MODE v2.5</small></div>
       <div class="actions">
         <button id="soundBtn" class="icon-btn" aria-label="切换声音">♫</button>
         <button id="pauseBtn" class="icon-btn" aria-label="暂停游戏">Ⅱ</button>
@@ -26,14 +26,35 @@
       <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
       <div id="startPanel" class="panel start-panel visible">
-        <div class="eyebrow">植物融合塔防 · 无限防守</div>
-        <h1>让每一株植物<br><em>长出另一种可能</em></h1>
-        <p>种下植物，拖到另一株上即时融合。尸潮永不停止，敌人会随波次持续强化；看看小万能守到第几波。</p>
+        <div class="eyebrow">植物融合塔防 · 选择玩法</div>
+        <h1>选择你的<br><em>守卫方式</em></h1>
+        <p>先选择模式，再从完整植物图鉴中带上 10 种植物。进入战场后，任何两株植物仍然可以定向融合。</p>
         <div class="feature-row">
-          <span>25 种植物</span><span>625 种定向组合</span><span>16 类僵尸</span><span>无限波次</span>
+          <span>25 种基础植物</span><span>625 种定向融合</span><span>每局选择 10 种</span><span>双模式</span>
         </div>
-        <button id="startBtn" class="primary-btn">开始无限防守 <b>→</b></button>
+        <div class="mode-grid" role="group" aria-label="游戏模式">
+          <button class="mode-card" data-game-mode="classic">
+            <span class="mode-icon">☀</span><b>经典模式</b><small>十波战役 · 守住即胜利</small><em>难度循序渐进</em>
+          </button>
+          <button class="mode-card" data-game-mode="tower">
+            <span class="mode-icon">♜</span><b>塔防模式</b><small>无限尸潮 · 挑战纪录</small><em>敌人持续强化</em>
+          </button>
+        </div>
         <button id="howBtn" class="text-btn">先看操作说明</button>
+      </div>
+
+      <div id="selectPanel" class="panel select-panel" aria-label="选择植物">
+        <div class="select-heading">
+          <div><div id="selectEyebrow" class="eyebrow">经典模式 · 出战准备</div><h2>选择 10 种植物</h2></div>
+          <div class="pick-counter"><b id="pickCount">0</b><span>/ 10</span></div>
+        </div>
+        <p class="select-copy">全部基础植物都可选择；进入战场后，两两融合可形成 625 种定向组合。</p>
+        <div id="plantPicker" class="plant-picker" role="list" aria-label="全部植物"></div>
+        <div class="select-actions">
+          <button id="backToModesBtn" class="secondary-btn">← 返回模式</button>
+          <button id="recommendBtn" class="secondary-btn">推荐阵容</button>
+          <button id="confirmPlantsBtn" class="primary-btn" disabled>还需选择 10 种</button>
+        </div>
       </div>
 
       <div id="howPanel" class="panel how-panel">
@@ -64,16 +85,17 @@
         <p id="resultCopy"></p>
         <div id="resultStats" class="result-stats"></div>
         <button id="restartBtn" class="primary-btn">再守一次 <b>↻</b></button>
+        <button id="resultMenuBtn" class="text-btn">返回模式选择</button>
       </div>
     </section>
 
     <footer>
       <span>操作：点击卡片种植 · 拖到空格移动 · 拖到植物融合 · 按住 F3 时停 · 空格暂停</span>
-      <span id="runtimeStatus">小万大站僵尸 · 无限防守版</span>
+      <span id="runtimeStatus">小万大站僵尸 · 双模式选卡版</span>
     </footer>
   </main>
   <output id="testTelemetry" hidden aria-hidden="true"></output>
-  <script src="src/core.js?v=2.4.0"></script>
-  <script src="src/game.js?v=2.4.0"></script>
+  <script src="src/core.js?v=2.5.0"></script>
+  <script src="src/game.js?v=2.5.0"></script>
 </body>
 </html>
