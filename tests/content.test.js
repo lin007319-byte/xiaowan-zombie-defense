@@ -53,6 +53,7 @@ assert.match(game, /z\.row===p\.row&&z\.x>=c\.x-10/);
 assert.match(game, /type:"gasRow"/);
 assert.match(game, /p\.gloomShotsLeft=3/);
 assert.match(game, /p\.gloomRest=1\.25/);
+assert.match(game, /const damage=p\.fusionId\?Core\.damageFor\(p\):28/);
 assert.match(game, /type:"gasArea"/);
 assert.match(game, /z\.poison=Math\.max/);
 assert.match(game, /GRID\.cw\*1\.5/);

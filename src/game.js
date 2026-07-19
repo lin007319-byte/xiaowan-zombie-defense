@@ -275,7 +275,7 @@
     const c=cellCenter(p.row,p.col),targets=state.zombies.filter(z=>z.alive&&Math.abs(z.x-c.x)<=GRID.cw*1.5&&Math.abs(z.y-c.y)<=GRID.ch*1.5);
     if(!targets.length)return;
     p.attackAnim=.34;
-    const damage=Core.damageFor(p);
+    const damage=p.fusionId?Core.damageFor(p):28;
     for(const z of targets){z.hp-=damage;z.hit=1;z.poison=Math.max(z.poison||0,1.1);z.weaken=Math.max(z.weaken,.18);if(z.hp<=0)killZombie(z);}
     state.effects.push({type:"gasArea",x:c.x,y:c.y,w:GRID.cw*3,h:GRID.ch*3,life:.42,max:.42,color:"#91c96a"});
     burstParticles(c.x,c.y,"#b7dd79",20,105);tone(135,.1,"sine",.022,48);

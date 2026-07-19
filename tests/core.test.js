@@ -24,6 +24,7 @@ assert.equal(Object.keys(Catalog.RECIPES).length, 168, "documented and equivalen
 assert.equal(Object.values(Catalog.FUSIONS).filter(plant => plant.available).length, 142, "142 plants are reachable from the expanded base roster");
 assert.equal(Core.PLANTS.fume.interval, 1.45, "大喷菇应每 1.45 秒喷射一次毒气");
 assert.equal(Core.PLANTS.fume.damage, 24, "大喷菇每次毒气伤害应为 24");
+assert.equal(Core.PLANTS.gloom.damage, 28, "忧郁菇每一喷伤害应为 28");
 
 for (const [pair, fusionId] of Object.entries(Catalog.RECIPES)) {
   const [a, b] = pair.split("|");
