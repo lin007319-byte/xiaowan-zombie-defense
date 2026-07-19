@@ -7,14 +7,14 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
-  <title>植物大战僵尸融合欠费版 · v4.4.0</title>
+  <title>植物大战僵尸融合欠费版 · v4.4.1</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%2310271f'/%3E%3Cpath d='M16 38C18 18 39 12 51 14c0 18-10 34-31 30 8-8 16-14 25-20-12 4-20 10-29 20z' fill='%23c9f26b'/%3E%3C/svg%3E">
-  <link rel="stylesheet" href="styles.css?v=4.4.0">
+  <link rel="stylesheet" href="styles.css?v=4.4.1">
 </head>
 <body>
   <main class="app-shell">
     <header class="topline">
-      <div class="brand"><span class="brand-seed">✦</span> 植物大战僵尸融合欠费版 <small>TEXT DEFENSE v4.4.0</small></div>
+      <div class="brand"><span class="brand-seed">✦</span> 植物大战僵尸融合欠费版 <small>TEXT DEFENSE v4.4.1</small></div>
       <div class="actions">
         <button id="soundBtn" class="icon-btn" aria-label="切换声音">♫</button>
         <button id="pauseBtn" class="icon-btn" aria-label="暂停游戏">Ⅱ</button>
@@ -42,7 +42,8 @@
           </button>
         </div>
         <div class="start-links">
-          <button id="almanacBtn" class="almanac-entry-btn"><span>▤</span><b>植物图鉴</b><small>48 基础 · 200 融合</small></button>
+          <button id="almanacBtn" class="almanac-entry-btn"><span>▤</span><b>植物图鉴</b><small>349 张植物卡片</small></button>
+          <button id="zombieAlmanacBtn" class="almanac-entry-btn zombie-entry-btn"><span>☠</span><b>僵尸图鉴</b><small>16 种入侵者</small></button>
           <button id="howBtn" class="text-btn">先看操作说明</button>
         </div>
       </div>
@@ -54,15 +55,34 @@
         </div>
         <div class="almanac-tools">
           <div class="almanac-tabs" role="group" aria-label="图鉴分类">
-            <button class="active" data-almanac-filter="all">全部 <b>248</b></button>
+            <button class="active" data-almanac-filter="all">全部 <b>349</b></button>
             <button data-almanac-filter="base">基础 <b>48</b></button>
-            <button data-almanac-filter="fusion">融合 <b>200</b></button>
-            <button data-almanac-filter="available">当前可融合 <b>142</b></button>
+            <button data-almanac-filter="fusion">融合/究极 <b>301</b></button>
+            <button data-almanac-filter="available">当前可融合 <b>180</b></button>
           </div>
           <label class="almanac-search"><span>⌕</span><input id="almanacSearch" type="search" placeholder="搜索植物或配方" autocomplete="off"></label>
         </div>
         <div id="almanacCount" class="almanac-count" aria-live="polite"></div>
         <div id="almanacGrid" class="almanac-grid" role="list" aria-label="植物卡片列表"></div>
+      </div>
+
+      <div id="zombieAlmanacPanel" class="panel almanac-panel zombie-almanac-panel" aria-label="僵尸图鉴">
+        <div class="almanac-heading">
+          <div><div class="eyebrow">敌军档案 · 文字卡片图鉴</div><h2>僵尸图鉴</h2><p>查看当前版本全部 16 种僵尸的基础血量、速度、类型和特殊能力</p></div>
+          <button class="close-btn" data-close="zombieAlmanacPanel" aria-label="关闭僵尸图鉴">×</button>
+        </div>
+        <div class="almanac-tools">
+          <div class="almanac-tabs zombie-almanac-tabs" role="group" aria-label="僵尸图鉴分类">
+            <button class="active" data-zombie-filter="all">全部 <b>16</b></button>
+            <button data-zombie-filter="normal">普通 <b>5</b></button>
+            <button data-zombie-filter="armored">重甲 <b>6</b></button>
+            <button data-zombie-filter="special">特殊 <b>9</b></button>
+            <button data-zombie-filter="air">空中 <b>2</b></button>
+          </div>
+          <label class="almanac-search"><span>⌕</span><input id="zombieAlmanacSearch" type="search" placeholder="搜索僵尸或能力" autocomplete="off"></label>
+        </div>
+        <div id="zombieAlmanacCount" class="almanac-count" aria-live="polite"></div>
+        <div id="zombieAlmanacGrid" class="almanac-grid zombie-almanac-grid" role="list" aria-label="僵尸卡片列表"></div>
       </div>
 
       <div id="selectPanel" class="panel select-panel" aria-label="选择植物">
@@ -117,9 +137,9 @@
     </footer>
   </main>
   <output id="testTelemetry" hidden aria-hidden="true"></output>
-  <script src="src/ultimate-catalog.js?v=4.4.0"></script>
-  <script src="src/fusion-catalog.js?v=4.4.0"></script>
-  <script src="src/core.js?v=4.4.0"></script>
-  <script src="src/game.js?v=4.4.0"></script>
+  <script src="src/ultimate-catalog.js?v=4.4.1"></script>
+  <script src="src/fusion-catalog.js?v=4.4.1"></script>
+  <script src="src/core.js?v=4.4.1"></script>
+  <script src="src/game.js?v=4.4.1"></script>
 </body>
 </html>

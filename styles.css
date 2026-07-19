@@ -72,13 +72,17 @@ h2 { font-size: clamp(28px, 3.2vw, 46px); }
 .mode-card b { font-size: 18px; }
 .mode-card small { margin-top: 6px; color: #cad9d0; font-size: 11px; }
 .mode-card em { margin-top: 4px; color: #9db6a7; font-size: 10px; font-style: normal; }
-.start-links { display: grid; grid-template-columns: 1.25fr 1fr; align-items: center; gap: 8px; margin-top: 12px; }
+.start-links { display: grid; grid-template-columns: 1fr 1fr .75fr; align-items: center; gap: 8px; margin-top: 12px; }
 .start-links .text-btn { margin: 0; }
 .almanac-entry-btn { display: grid; grid-template-columns: 34px 1fr; grid-template-rows: auto auto; column-gap: 10px; align-items: center; padding: 9px 13px; border: 1px solid rgba(255,217,108,.3); border-radius: 14px; background: linear-gradient(135deg, rgba(126,91,38,.58), rgba(41,68,45,.8)); cursor: pointer; text-align: left; transition: .2s; }
 .almanac-entry-btn:hover { transform: translateY(-2px); border-color: var(--gold); box-shadow: 0 10px 25px rgba(0,0,0,.25); }
 .almanac-entry-btn > span { grid-row: 1 / 3; display: grid; place-items: center; width: 32px; height: 38px; border-radius: 7px 11px 11px 7px; background: #e6c273; color: #49351d; box-shadow: inset 4px 0 rgba(88,62,28,.2); font-size: 18px; }
 .almanac-entry-btn b { font-size: 13px; }
 .almanac-entry-btn small { color: #d8c995; font-size: 9px; }
+.zombie-entry-btn { border-color: rgba(220,143,155,.34); background: linear-gradient(135deg, rgba(102,58,65,.72), rgba(40,61,49,.86)); }
+.zombie-entry-btn:hover { border-color: #e6a2ac; }
+.zombie-entry-btn > span { background: #9caf97; color: #263529; box-shadow: inset 4px 0 rgba(42,58,44,.22); }
+.zombie-entry-btn small { color: #dcb9bd; }
 .almanac-panel { width: min(1140px, calc(100% - 24px)); height: calc(100% - 24px); padding: 20px 24px 18px; display: flex; flex-direction: column; overflow: hidden; }
 .almanac-heading { flex: 0 0 auto; display: flex; align-items: flex-start; justify-content: space-between; gap: 18px; }
 .almanac-heading h2 { font-size: clamp(25px, 3vw, 40px); }
@@ -111,6 +115,14 @@ h2 { font-size: clamp(28px, 3.2vw, 46px); }
 .card-stats b { display: block; margin-top: 2px; color: #f3fff4; font-size: 10px; }
 .card-desc { margin: 0 !important; color: #b8c9bf !important; font-size: 9px !important; line-height: 1.55 !important; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 4; overflow: hidden; }
 .almanac-empty { grid-column: 1 / -1; padding: 50px 20px; text-align: center; color: var(--muted); }
+.zombie-almanac-panel { background: rgba(26,31,28,.96); }
+.zombie-almanac-tabs button.active { border-color: rgba(230,162,172,.62); background: rgba(171,89,102,.18); }
+.zombie-almanac-tabs button b { color: #f2b4bd; }
+.zombie-almanac-grid { scrollbar-color: rgba(230,162,172,.48) transparent; }
+.zombie-card { min-height: 222px; background: linear-gradient(155deg, color-mix(in srgb, var(--card-color) 18%, rgba(48,39,39,.98)), rgba(17,23,20,.99) 52%); }
+.zombie-card .card-emblem { border-radius: 45% 45% 52% 52%; color: #1d2b22; }
+.zombie-card .card-badge { background: rgba(230,162,172,.15); color: #ffd7dc; }
+.zombie-card .card-recipe { border-color: rgba(230,162,172,.19); background: rgba(169,82,96,.08); color: #f4c0c7; }
 .select-panel { width: min(1040px, calc(100% - 30px)); padding: 26px 30px; }
 .select-heading { display: flex; align-items: end; justify-content: space-between; gap: 20px; }
 .select-heading h2 { font-size: clamp(26px, 3vw, 42px); }

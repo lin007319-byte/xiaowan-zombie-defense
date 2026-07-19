@@ -337,6 +337,24 @@
   function splashImpact(x,y,radius,damage){burstParticles(x,y,"#9adb76",9,65);for(const z of state.zombies)if(z.alive&&Math.hypot(z.x-x,z.y-y)<radius){z.hp-=damage;z.hit=1;if(z.hp<=0)killZombie(z);}}
 
   const ZOMBIE_DEFS={basic:{hp:270,speed:18,color:"#8eb38c"},cone:{hp:640,speed:17,color:"#dca14a"},bucket:{hp:1370,speed:14,color:"#a9b6b4",metal:true},runner:{hp:270,speed:28,color:"#b2d27f"},paper:{hp:420,speed:19,color:"#a0b59b"},shield:{hp:1100,speed:14,color:"#7fa09b",metal:true},healer:{hp:540,speed:16,color:"#9db995"},football:{hp:1670,speed:24,color:"#a87070",metal:true},balloon:{hp:270,speed:25,color:"#9aaec2",air:true},miner:{hp:630,speed:21,color:"#927f68",metal:true},dancer:{hp:750,speed:17,color:"#b68ab9"},giant:{hp:3000,speed:9,color:"#708c72"},imp:{hp:270,speed:31,color:"#a8bd8c"},ice:{hp:680,speed:16,color:"#8bb9c7"},pole:{hp:500,speed:30,color:"#94ad87",metal:true},flyer:{hp:720,speed:23,color:"#8199a0",air:true}};
+  const ZOMBIE_ALMANAC={
+    basic:{name:"普通僵尸",sigil:"尸",tags:["normal"],firstWave:1,armor:"无",ability:"最基础的僵尸，沿当前行前进并啃咬植物。"},
+    cone:{name:"路障僵尸",sigil:"△",tags:["normal","armored"],firstWave:2,armor:"路障",ability:"头戴路障，拥有比普通僵尸更高的耐久。"},
+    bucket:{name:"铁桶僵尸",sigil:"▣",tags:["armored"],firstWave:5,armor:"金属铁桶",ability:"重型金属防具；磁力类植物可以剥离它的护甲。"},
+    runner:{name:"奔跑僵尸",sigil:"»",tags:["normal"],firstWave:2,armor:"无",ability:"移动速度较快，会迅速冲击防线较薄弱的行。"},
+    paper:{name:"报纸僵尸",sigil:"▤",tags:["normal"],firstWave:3,armor:"报纸",ability:"生命低于一半后进入愤怒状态，移动速度提升至约 1.7 倍。"},
+    shield:{name:"盾牌僵尸",sigil:"▰",tags:["armored"],firstWave:4,armor:"金属盾牌",ability:"盾牌降低普通子弹伤害；火焰与爆炸攻击更有效。"},
+    healer:{name:"治疗僵尸",sigil:"✚",tags:["special"],firstWave:4,armor:"无",ability:"每 3.2 秒治疗同一路附近的僵尸 34 点生命。"},
+    football:{name:"橄榄球僵尸",sigil:"◆",tags:["armored","special"],firstWave:6,armor:"金属护具",ability:"高血量、高速度的冲锋单位；磁力类植物可以对其破甲。"},
+    balloon:{name:"气球僵尸",sigil:"○",tags:["air","special"],firstWave:11,armor:"空中",ability:"飞行时越过地面植物；照明、风力和特殊子弹可以将其击落。"},
+    miner:{name:"矿工僵尸",sigil:"⌁",tags:["armored","special"],firstWave:7,armor:"矿工装备",ability:"从草坪中后段切入，能够绕过部署在前排的防线。"},
+    dancer:{name:"舞王僵尸",sigil:"♪",tags:["special"],firstWave:8,armor:"无",ability:"每 6 秒召唤一只小鬼僵尸加入当前行。"},
+    giant:{name:"巨人僵尸",sigil:"巨",tags:["special"],firstWave:9,armor:"巨型",ability:"拥有极高耐久；每 1.7 秒蓄力砸击植物，造成 150 点伤害。"},
+    imp:{name:"小鬼僵尸",sigil:"小",tags:["normal"],firstWave:6,armor:"无",ability:"血量较低但移动极快，也会被舞王僵尸召唤。"},
+    ice:{name:"寒冰僵尸",sigil:"❄",tags:["special"],firstWave:8,armor:"冰霜",ability:"啃咬植物时使目标冻结 1.5 秒。"},
+    pole:{name:"撑杆僵尸",sigil:"⌒",tags:["armored","special"],firstWave:11,armor:"撑杆",ability:"首次接近植物时跳过目标，但无法越过高坚果。"},
+    flyer:{name:"飞行僵尸",sigil:"翼",tags:["air","special"],firstWave:11,armor:"空中",ability:"飞行状态绕过地面植物，可被风力、照明和特殊攻击击落。"}
+  };
   const ZOMBIE_POOLS=[
     ["basic"],["basic","basic","cone","runner"],["basic","cone","paper","runner"],["cone","paper","shield","healer"],["bucket","shield","healer","paper"],
     ["football","imp","cone","runner"],["miner","shield","paper","runner"],["dancer","ice","healer","football"],["giant","bucket","dancer","miner"],["giant","football","ice","dancer","healer","shield","bucket","imp"]
@@ -527,6 +545,22 @@
   }
   document.querySelectorAll("[data-almanac-filter]").forEach(button=>button.onclick=()=>{almanacFilter=button.dataset.almanacFilter;document.querySelectorAll("[data-almanac-filter]").forEach(tab=>tab.classList.toggle("active",tab===button));renderAlmanac();sfx("select");});
   almanacSearch.addEventListener("input",renderAlmanac);
+  const zombieAlmanacGrid=document.getElementById("zombieAlmanacGrid"),zombieAlmanacSearch=document.getElementById("zombieAlmanacSearch"),zombieAlmanacCount=document.getElementById("zombieAlmanacCount");
+  let zombieAlmanacFilter="all";
+  const zombieAlmanacEntries=Object.entries(ZOMBIE_DEFS).map(([id,def])=>({id,...def,...ZOMBIE_ALMANAC[id]}));
+  function zombieSpeedLabel(speed){return speed>=28?"极快":speed>=23?"快速":speed>=17?"普通":"缓慢";}
+  function zombieAlmanacCard(item){
+    const badge=item.air?"空中":item.metal?"重甲":item.tags.includes("special")?"特殊":"普通";
+    return `<article class="almanac-card zombie-card" role="listitem" style="--card-color:${escapeText(item.color)}" data-kind="${escapeText(item.id)}"><span class="card-badge">${badge}</span><div class="card-top"><span class="card-emblem">${escapeText(item.sigil)}</span><span class="card-title"><b>${escapeText(item.name)}</b><small>敌军档案 · ${escapeText(item.id.toUpperCase())}</small></span></div><div class="card-recipe">特殊能力：${escapeText(item.ability)}</div><div class="card-stats"><span>基础生命<b>${escapeText(item.hp)}</b></span><span>速度<b>${escapeText(zombieSpeedLabel(item.speed))} ${escapeText(item.speed)}</b></span><span>首次登场<b>第 ${escapeText(item.firstWave)} 波</b></span></div><p class="card-desc">防具：${escapeText(item.armor)}。无限模式中，生命与速度会随波次继续提升。</p></article>`;
+  }
+  function renderZombieAlmanac(){
+    const query=zombieAlmanacSearch.value.trim().toLowerCase();
+    const visible=zombieAlmanacEntries.filter(item=>(zombieAlmanacFilter==="all"||item.tags.includes(zombieAlmanacFilter))&&(!query||`${item.name} ${item.armor} ${item.ability} ${item.id}`.toLowerCase().includes(query)));
+    zombieAlmanacGrid.innerHTML=visible.length?visible.map(zombieAlmanacCard).join(""):`<div class="almanac-empty">没有找到符合条件的僵尸档案</div>`;
+    zombieAlmanacCount.textContent=`显示 ${visible.length} / ${zombieAlmanacEntries.length} 种僵尸`;
+  }
+  document.querySelectorAll("[data-zombie-filter]").forEach(button=>button.onclick=()=>{zombieAlmanacFilter=button.dataset.zombieFilter;document.querySelectorAll("[data-zombie-filter]").forEach(tab=>tab.classList.toggle("active",tab===button));renderZombieAlmanac();sfx("select");});
+  zombieAlmanacSearch.addEventListener("input",renderZombieAlmanac);
   picker.addEventListener("click",e=>{const button=e.target.closest("[data-plant-id]");if(!button)return;const id=button.dataset.plantId,index=pendingLoadout.indexOf(id);if(index>=0)pendingLoadout.splice(index,1);else if(pendingLoadout.length<LOADOUT_SIZE)pendingLoadout.push(id);else{toast("每局最多选择 10 种植物");return;}sfx("select");renderPicker();});
   document.querySelectorAll("[data-game-mode]").forEach(button=>button.onclick=()=>{initAudio();pendingMode=button.dataset.gameMode;pendingLoadout=[];document.getElementById("selectEyebrow").textContent=`${pendingMode==="classic"?"经典模式 · 十波通关":"塔防模式 · 无限防守"} · 出战准备`;renderPicker();showPanel("selectPanel");sfx("select");});
   document.getElementById("recommendBtn").onclick=()=>{pendingLoadout=[...RECOMMENDED_LOADOUT];renderPicker();sfx("select");};
@@ -534,6 +568,7 @@
   confirmPlantsBtn.onclick=()=>{if(pendingLoadout.length<1||pendingLoadout.length>LOADOUT_SIZE)return;state.gameMode=pendingMode;state.loadout=[...pendingLoadout];reset();};
   document.getElementById("howBtn").onclick=()=>showPanel("howPanel");
   document.getElementById("almanacBtn").onclick=()=>{renderAlmanac();showPanel("almanacPanel");sfx("select");};
+  document.getElementById("zombieAlmanacBtn").onclick=()=>{renderZombieAlmanac();showPanel("zombieAlmanacPanel");sfx("select");};
   document.querySelectorAll("[data-close]").forEach(b=>b.onclick=()=>state.mode==="menu"?showPanel("startPanel"):hidePanels());
   document.getElementById("pauseBtn").onclick=togglePause;document.getElementById("resumeBtn").onclick=togglePause;
   document.getElementById("restartBtn").onclick=reset;document.getElementById("restartBtnPause").onclick=reset;
@@ -544,7 +579,7 @@
   addEventListener("keydown",e=>{if(e.code==="Space"){e.preventDefault();togglePause();}if(e.code==="Escape"&&state.paused)togglePause();});
   addEventListener("blur",()=>{state.timeStop=false;if(state.mode==="playing"&&!state.paused)togglePause();else syncTimeStopButton();});
 
-  buildPlantPicker();renderAlmanac();showPanel("startPanel");
+  buildPlantPicker();renderAlmanac();renderZombieAlmanac();showPanel("startPanel");
 
   fetch(new URL("api/status",location.href),{cache:"no-store"}).then(r=>r.ok?r.json():null).then(info=>{
     if(!info?.ok)return;
