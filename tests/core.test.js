@@ -4,7 +4,7 @@ const Core = require("../src/core.js");
 let uid = 1;
 const make = id => Core.createPlant(id, uid++, 0, 0);
 const plantIds = Object.keys(Core.PLANTS);
-assert.equal(plantIds.length, 20, "v2.3 should expose 20 plant types");
+assert.equal(plantIds.length, 25, "v2.4 should expose 25 plant types");
 
 for (const donorId of plantIds) {
   for (const hostId of plantIds) {
