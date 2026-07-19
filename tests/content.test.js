@@ -3,6 +3,7 @@ const fs = require("node:fs");
 const path = require("node:path");
 
 const game = fs.readFileSync(path.join(__dirname, "../src/game.js"), "utf8");
+const html = fs.readFileSync(path.join(__dirname, "../index.html"), "utf8");
 const zombieIds = ["basic", "cone", "bucket", "runner", "paper", "shield", "healer", "football", "balloon", "miner", "dancer", "giant", "imp", "ice", "pole", "flyer"];
 
 assert.match(game, /const BASE_WAVE_SECONDS = 30;/);
@@ -64,5 +65,8 @@ assert.match(game, /function updateInheritedTraits\(p,dt,def,hasEnemy\)/);
 assert.match(game, /p\.genes\.includes\("devour"\)/);
 assert.match(game, /p\.genes\.includes\("ignite"\)/);
 assert.match(game, /p\.genes\.includes\("gust"\)/);
+assert.match(html, /src\/fusion-catalog\.js\?v=3\.0\.0/);
+assert.match(html, /65 种文件融合植物/);
+assert.match(game, /const plantDef = plant => Core\.plantDef\(plant\)/);
 
 console.log(`content tests passed: text rendering + classic/tower modes + 10-card loadout + ${zombieIds.length} zombie types`);

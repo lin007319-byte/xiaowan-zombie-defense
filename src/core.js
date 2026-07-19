@@ -1,8 +1,9 @@
 (function (root, factory) {
-  const api = factory();
+  const catalog = root.FusionCatalog || (typeof module !== "undefined" && module.exports ? require("./fusion-catalog.js") : null);
+  const api = factory(catalog);
   if (typeof module !== "undefined" && module.exports) module.exports = api;
   root.FusionCore = api;
-})(typeof globalThis !== "undefined" ? globalThis : this, function () {
+})(typeof globalThis !== "undefined" ? globalThis : this, function (Catalog) {
   "use strict";
 
   const PLANTS = {
@@ -38,7 +39,8 @@
     melon: { id: "melon", name: "西瓜投手", short: "西瓜", cost: 175, cooldown: 7, body: "shooter", gene: "splash", hp: 300, damage: 44, interval: 2.1, color: "#67bf66" }
   };
 
-  const RECIPES = {
+  /* Previous free-form recipes removed: the supplied 65-plant document is now authoritative. */
+  const LEGACY_RECIPES = {
     "sun>pea": { name: "阳光豌豆", note: "阳光弹命中后有概率长出小阳光", tone: "gold" },
     "pea>sun": { name: "豆荚花盘", note: "每次产阳光时向危险路线发射种子", tone: "gold" },
     "nut>pea": { name: "坚果炮台", note: "获得坚果护盾，破盾后短暂狂热", tone: "gold" },
@@ -70,46 +72,38 @@
 
   const RANK_DAMAGE = [1, 1.35, 1.85];
   const RANK_HP = [1, 1.25, 1.6];
-  const PLANT_IDS = Object.keys(PLANTS);
-  const PLANT_INDEX = Object.fromEntries(PLANT_IDS.map((id, index) => [id, index]));
-  const pairKey = (a, b) => PLANT_INDEX[a] <= PLANT_INDEX[b] ? `${a}|${b}` : `${b}|${a}`;
-  const PAIR_RECIPES = {};
-  for (const [key, recipe] of Object.entries(RECIPES)) {
-    const [materialId, baseId] = key.split(">");
-    const keyForPair = pairKey(materialId, baseId);
-    if (!PAIR_RECIPES[keyForPair]) PAIR_RECIPES[keyForPair] = { materialId, baseId, recipe };
-  }
+  void LEGACY_RECIPES;
+  const FUSIONS = Catalog?.FUSIONS || {};
+  const FUSION_RECIPES = Catalog?.RECIPES || {};
+  const DOCUMENT_OVERRIDES = {
+    fusion08: { body: "burst", interval: 1.4 },
+    fusion10: { body: "melee", interval: 30 },
+    fusion12: { body: "melee", interval: 40 },
+    fusion17: { body: "trap", interval: .25 },
+    fusion22: { body: "shooter", interval: 30 },
+    fusion32: { body: "trap", interval: 1 },
+    fusion33: { body: "trap", interval: 1 }
+  };
+  for (const [id, override] of Object.entries(DOCUMENT_OVERRIDES)) if (FUSIONS[id]) Object.assign(FUSIONS[id], override);
+  const pairKey = (a, b) => [a, b].sort().join("|");
 
   function unique(arr) { return [...new Set(arr)]; }
 
-  function canonicalPlan(a, b) {
-    const authored = PAIR_RECIPES[pairKey(a, b)];
-    if (authored) return authored;
-    const baseId = PLANT_INDEX[a] <= PLANT_INDEX[b] ? a : b;
-    return { baseId, materialId: baseId === a ? b : a, recipe: null };
-  }
-
   function previewFusion(donor, host) {
     if (!donor || !host || donor.uid === host.uid) return { valid: false, reason: "请选择另一株植物" };
-    if (donor.baseId === host.baseId && donor.genes.length === 0 && host.genes.length === 0) {
-      if (host.rank >= 3) return { valid: false, reason: "已经达到三星" };
-      return { valid: true, same: true, name: `${PLANTS[host.baseId].short} ${host.rank + 1}★`, note: "同株融合：升星并恢复部分耐久", tone: "rank" };
-    }
-    const plan = canonicalPlan(donor.baseId, host.baseId);
-    const gene = PLANTS[plan.materialId].gene;
-    if (host.genes.length >= 2 && !host.genes.includes(gene)) return { valid: false, reason: "基因槽已满" };
-    const recipe = plan.recipe;
-    const duplicate = host.genes.includes(gene);
+    if (donor.fusionId || host.fusionId) return { valid: false, reason: "普通融合植物不能继续叠加融合" };
+    const fusionId = FUSION_RECIPES[pairKey(donor.baseId, host.baseId)];
+    const fusion = FUSIONS[fusionId];
+    if (!fusion) return { valid: false, reason: "该组合不在配方文件中" };
     return {
       valid: true,
-      same: false,
-      baseId: plan.baseId,
-      materialId: plan.materialId,
-      gene,
-      authored: Boolean(recipe),
-      name: recipe?.name || `${PLANTS[plan.baseId].short}${PLANTS[plan.materialId].short}`,
-      note: recipe?.note || (duplicate ? `${geneName(gene)}基因强化` : `继承“${geneName(gene)}”基因`),
-      tone: recipe?.tone || "generic"
+      fusionId,
+      fusion,
+      baseId: fusion.baseId,
+      authored: true,
+      name: fusion.name,
+      note: fusion.description.length > 72 ? `${fusion.description.slice(0, 70)}…` : fusion.description,
+      tone: "gold"
     };
   }
 
@@ -120,28 +114,21 @@
   function fuse(donor, host) {
     const preview = previewFusion(donor, host);
     if (!preview.valid) return { ok: false, preview };
-    if (preview.same) {
-      host.rank = Math.min(3, host.rank + 1);
-      const def = PLANTS[host.baseId];
-      host.maxHp = Math.round(def.hp * RANK_HP[host.rank - 1] + host.genes.filter(g => g === "guard").length * 700);
-      host.hp = Math.min(host.maxHp, host.hp + host.maxHp * .35);
-    } else {
-      const oldRatio = host.maxHp > 0 ? Math.max(0, host.hp / host.maxHp) : 1;
-      const duplicate = host.genes.includes(preview.gene);
-      host.baseId = preview.baseId;
-      host.genes = unique([...host.genes, preview.gene]);
-      host.materialIds = unique([...(host.materialIds || []), preview.materialId]);
-      if (duplicate) host.geneLevels[preview.gene] = Math.min(3, (host.geneLevels[preview.gene] || 1) + 1);
-      else host.geneLevels[preview.gene] = 1;
-      host.displayName = preview.name;
-      const def = PLANTS[host.baseId];
-      const guardLevel = host.geneLevels.guard || 0, armorLevel = host.geneLevels.armor || 0, tallLevel = host.geneLevels.tall || 0;
-      host.maxHp = Math.round(def.hp * RANK_HP[host.rank - 1] + guardLevel * 700 + armorLevel * 1100 + tallLevel * 1800);
-      host.hp = Math.min(host.maxHp, Math.round(host.maxHp * oldRatio + host.maxHp * .12));
-      host.shield = guardLevel * 700 + armorLevel * 1100;
-      host.timer = def.interval || 1;
-      host.attackCount = 0;
-    }
+    const oldRatio = host.maxHp > 0 ? Math.max(0, host.hp / host.maxHp) : 1;
+    const fusion = preview.fusion;
+    host.fusionId = fusion.id;
+    host.baseId = fusion.baseId;
+    host.genes = unique(fusion.traits || []);
+    host.materialIds = unique((fusion.materialIds || []).filter(Boolean));
+    host.geneLevels = Object.fromEntries(host.genes.map(gene => [gene, 1]));
+    host.displayName = fusion.name;
+    host.rank = 1;
+    host.maxHp = fusion.hp;
+    host.hp = Math.min(host.maxHp, Math.round(host.maxHp * oldRatio + host.maxHp * .12));
+    host.shield = Math.min(host.maxHp * .35, (host.genes.includes("armor") ? 900 : 0) + (host.genes.includes("guard") ? 600 : 0));
+    host.timer = fusion.interval || 1;
+    host.detonate = fusion.body === "burst" ? .8 : undefined;
+    host.attackCount = 0;
     host.fusions = (host.fusions || 0) + 1;
     return { ok: true, preview, host };
   }
@@ -149,16 +136,18 @@
   function createPlant(baseId, uid, row, col) {
     const d = PLANTS[baseId];
     return {
-      uid, baseId, row, col, rank: 1, genes: [], materialIds: [], geneLevels: {}, displayName: d.name,
+      uid, baseId, fusionId: null, row, col, rank: 1, genes: [], materialIds: [], geneLevels: {}, displayName: d.name,
       hp: d.hp, maxHp: d.hp, shield: 0, timer: d.interval || 1, attackCount: 0,
       age: 0, hitFlash: 0, attackAnim: 0, bob: Math.random() * 6, fusions: 0, alive: true
     };
   }
 
   function damageFor(plant) {
-    const d = PLANTS[plant.baseId];
+    const d = plant.fusionId ? FUSIONS[plant.fusionId] : PLANTS[plant.baseId];
     return Math.round((d.damage || 0) * RANK_DAMAGE[plant.rank - 1]);
   }
 
-  return { PLANTS, RECIPES, RANK_DAMAGE, RANK_HP, previewFusion, fuse, createPlant, damageFor, geneName };
+  function plantDef(plant) { return plant?.fusionId ? FUSIONS[plant.fusionId] : PLANTS[plant?.baseId]; }
+
+  return { PLANTS, FUSIONS, FUSION_RECIPES, RANK_DAMAGE, RANK_HP, previewFusion, fuse, createPlant, damageFor, plantDef, geneName };
 });
