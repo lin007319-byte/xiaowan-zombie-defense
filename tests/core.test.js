@@ -19,9 +19,9 @@ const makeToken = token => {
 };
 
 assert.equal(Object.keys(Core.PLANTS).length, 48, "the expanded base roster should contain 48 plants");
-assert.equal(Object.keys(Catalog.FUSIONS).length, 301, "the documents contain 200 fusion plants and 101 ultimate plants");
-assert.equal(Object.keys(Catalog.RECIPES).length, 206, "documented and equivalent materials should yield 206 executable drag steps");
-assert.equal(Object.values(Catalog.FUSIONS).filter(plant => plant.available).length, 180, "180 plants are reachable from the expanded roster");
+assert.equal(Object.keys(Catalog.FUSIONS).length, 302, "the catalog contains 201 fusion plants and 101 ultimate plants");
+assert.equal(Object.keys(Catalog.RECIPES).length, 207, "documented and equivalent materials should yield 207 executable drag steps");
+assert.equal(Object.values(Catalog.FUSIONS).filter(plant => plant.available).length, 181, "181 plants are reachable from the expanded roster");
 const ultimatePlants = Object.values(Catalog.FUSIONS).filter(plant => plant.abilities?.ultimate);
 assert.equal(ultimatePlants.length, 101, "the PDF should contribute all 101 ultimate plants");
 assert.equal(ultimatePlants.filter(plant => plant.available).length, 38, "38 ultimate plants have complete executable recipes");
@@ -71,6 +71,11 @@ assert.equal(Catalog.FUSIONS.ultimate002.name, "究极樱桃射手");
 assert.equal(Catalog.FUSIONS.ultimate101.name, "末影南瓜箱子");
 assert.equal(Catalog.FUSIONS.ultimate002.abilities.shotCount, 4);
 assert.equal(Catalog.FUSIONS.ultimate002.damage, 300);
+assert.equal(Catalog.FUSIONS.fusion050.name, "火焰三线射手");
+assert.equal(Catalog.RECIPES["fusion050|pepper"], "fusion201");
+assert.equal(Catalog.FUSIONS.fusion201.name, "灰烬三线射手");
+assert.equal(Catalog.FUSIONS.fusion201.damage, 0);
+assert.equal(Catalog.FUSIONS.fusion201.body, "guard");
 
 const ability = name => Object.values(Catalog.FUSIONS).find(plant => plant.name === name).abilities;
 assert.equal(ability("双发射手").shotCount, 2);
@@ -80,4 +85,4 @@ assert.deepEqual([ability("豌豆向日葵").sunEvery, ability("豌豆向日葵"
 assert.equal(ability("坚果射手").pierce, true);
 assert.equal(ability("超级樱桃射手").splash, true);
 
-console.log("core tests passed: 48 bases, 301 documented fusion/ultimate plants, 206 semantic drag steps, 180 reachable fusions");
+console.log("core tests passed: 48 bases, 302 documented fusion/ultimate plants, 207 semantic drag steps, 181 reachable fusions");
