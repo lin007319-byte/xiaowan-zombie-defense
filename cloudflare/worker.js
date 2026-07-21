@@ -1,4 +1,4 @@
-const VERSION = "4.8.0-worker";
+const VERSION = "4.8.1-worker";
 
 export default {
   async fetch(request, env) {
