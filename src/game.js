@@ -9,6 +9,9 @@
   const CARD_X = 274, CARD_STEP = 71, CARD_W = 66, CARD_H = 76;
   const TYPES = Object.keys(Core.PLANTS);
   const plantDef = plant => Core.plantDef(plant);
+  const enemyZombie = zombie => zombie.alive && !zombie.charmed;
+  const hasPlantMaterial = (plant,id) => plant.baseId===id || Boolean(plant.materialIds?.includes(id));
+  const isScaredyPlant = plant => hasPlantMaterial(plant,"scaredy") && !hasPlantMaterial(plant,"fume");
   const LOADOUT_SIZE = 10;
   const RECOMMENDED_LOADOUT = ["sun","pea","nut","potato","frost","chomper","puff","fume","corn","melon"];
   const TAU = Math.PI * 2;
@@ -199,7 +202,8 @@
     const plant=Core.createPlant(id,state.nextUid++,row,col); state.plants.push(plant);
     state.sun-=def.cost; state.cooldowns[id]=def.cooldown; state.stats.planted++; state.selected=null; state.tutorial.planted=true;
     const c=cellCenter(row,col); burstParticles(c.x,c.y,def.color,18,60); floater(c.x,c.y-40,`-${def.cost} ☀`,"#ffe47d"); sfx("plant");
-    if(def.body==="burst") plant.detonate=.8;
+    plant.armed=id!=="potato";plant.armTimer=id==="potato"?1.4:0;
+    if(def.body==="burst"&&!['potato','squash'].includes(id)) plant.detonate=.8;
   }
   function fuseSelectedInto(host) {
     const id=state.selected,def=Core.PLANTS[id];if(!id||!host)return;
@@ -214,6 +218,7 @@
     const preview=Core.previewFusion(donor,host); const c=cellCenter(host.row,host.col);
     const result=Core.fuse(donor,host); if(!result.ok)return;
     host.devourCharge=isChomperPlant(host)&&host.fusionId?0:undefined;
+    host.armed=host.baseId!=="potato";host.armTimer=host.baseId==="potato"?1.4:0;
     donor.alive=false; state.stats.fusions++; state.stats.discovered.add(preview.name);
     burstParticles(c.x,c.y,"#f5df78",36,130); burstParticles(c.x,c.y,Core.PLANTS[donor.baseId].color,24,90);
     floater(c.x,c.y-58,preview.name,preview.authored?"#ffe27a":"#b9f4a0",1.2); state.cameraShake=5; sfx("fuse");
@@ -244,16 +249,34 @@
 
   function updatePlants(dt) {
     for(const p of state.plants){if(!p.alive)continue;p.age+=dt;p.hitFlash=Math.max(0,p.hitFlash-dt*4);p.attackAnim=Math.max(0,(p.attackAnim||0)-dt);p.freeze=Math.max(0,(p.freeze||0)-dt);const chomper=isChomperPlant(p);if(chomper&&p.fusionId){const rule=chomperRule(p);p.devourCharge=Math.min(rule.devourCooldown,(p.devourCharge||0)+dt);if(p.hp>p.maxHp)p.hp=Math.max(p.maxHp,p.hp-p.maxHp*.05*dt);}if(p.freeze>0||p.dragging)continue;const rate=(p.baseId==="coffee"?1.18:1)*(p.genes.includes("haste")?1.3:1);p.timer-=dt*rate;
-      const def=plantDef(p);
+      const def=plantDef(p),center=cellCenter(p.row,p.col);
+      if(p.baseId==="potato"){
+        if(!p.armed){p.armTimer=Math.max(0,(p.armTimer??1.4)-dt);if(p.armTimer<=0){p.armed=true;floater(center.x,center.y-46,"已出土","#ffe28a");}continue;}
+        const target=state.zombies.find(z=>enemyZombie(z)&&!z.air&&z.row===p.row&&Math.abs(z.x-center.x)<52);
+        if(target){explosion(center.x,center.y,105,Core.damageFor(p)||900,"#d89b54");p.alive=false;}continue;
+      }
+      if(p.baseId==="squash"){
+        const target=state.zombies.filter(z=>enemyZombie(z)&&!z.air&&z.row===p.row&&z.x>center.x-28&&z.x<center.x+150).sort((a,b)=>a.x-b.x)[0];
+        if(target){p.attackAnim=.7;target.hp-=Core.damageFor(p)||900;target.hit=1;state.effects.push({type:"impact",x:target.x,y:target.y+14,life:.55,max:.55,color:"#9bd36c"});burstParticles(target.x,target.y,"#9bd36c",28,135);floater(target.x,target.y-72,"窝瓜重压!","#d9ff9d");if(target.hp<=0)killZombie(target);p.alive=false;sfx("slam");}continue;
+      }
+      if(p.baseId==="kelp"){
+        const target=state.zombies.filter(z=>enemyZombie(z)&&!z.air&&z.row===p.row&&Math.abs(z.x-center.x)<78).sort((a,b)=>Math.abs(a.x-center.x)-Math.abs(b.x-center.x))[0];
+        if(target){target.hp=0;killZombie(target);p.alive=false;state.effects.push({type:"submerge",x:target.x,y:target.y,life:.8,max:.8,color:"#54c9bd"});burstParticles(target.x,target.y+22,"#66d8cb",34,120);floater(target.x,target.y-72,"拖入水下!","#a7fff4");tone(105,.25,"sine",.035,-55);}continue;
+      }
+      if(isScaredyPlant(p)){
+        p.scared=state.zombies.some(z=>enemyZombie(z)&&Math.abs(z.x-center.x)<=GRID.cw*1.5&&Math.abs(z.y-center.y)<=GRID.ch*1.5);
+        if(p.scared)continue;
+      }else p.scared=false;
       if(def.body==="burst"&&!chomper){p.detonate-=dt;if(p.detonate<=0)explodePlant(p);continue;}
-      const center=cellCenter(p.row,p.col);
       const hasEnemy=isAshThreepeater(p)?false:isThreepeaterPlant(p)
-        ? state.zombies.some(z=>z.alive&&threepeaterRows(p).includes(z.row)&&z.x>center.x-10)
+        ? state.zombies.some(z=>enemyZombie(z)&&threepeaterRows(p).includes(z.row)&&z.x>center.x-10)
         : p.baseId==="gloom"
-        ? state.zombies.some(z=>z.alive&&Math.abs(z.x-center.x)<=GRID.cw*1.5&&Math.abs(z.y-center.y)<=GRID.ch*1.5)
+        ? state.zombies.some(z=>enemyZombie(z)&&Math.abs(z.x-center.x)<=GRID.cw*1.5&&Math.abs(z.y-center.y)<=GRID.ch*1.5)
+        : p.baseId==="cattail"
+          ? state.zombies.some(enemyZombie)
         : p.baseId==="star"
-          ? state.zombies.some(z=>z.alive)
-          : state.zombies.some(z=>z.alive&&z.row===p.row&&z.x>center.x-10);
+          ? state.zombies.some(enemyZombie)
+          : state.zombies.some(z=>enemyZombie(z)&&z.row===p.row&&z.x>center.x-10);
       if(chomper&&p.timer<=0)chomp(p);
       else if(p.baseId==="gloom")updateGloom(p,dt,hasEnemy);
       else if(p.baseId==="fume")updateFume(p,hasEnemy);
@@ -270,7 +293,7 @@
   }
   function updateFume(p,hasEnemy){
     if(!hasEnemy||p.timer>0)return;
-    const c=cellCenter(p.row,p.col),def=plantDef(p),targets=state.zombies.filter(z=>z.alive&&z.row===p.row&&z.x>=c.x-10);
+    const c=cellCenter(p.row,p.col),def=plantDef(p),targets=state.zombies.filter(z=>enemyZombie(z)&&z.row===p.row&&z.x>=c.x-10);
     if(!targets.length)return;
     p.attackAnim=.48;
     const damage=Core.damageFor(p);
@@ -285,7 +308,7 @@
     p.gloomPulseTimer=Math.max(0,(p.gloomPulseTimer||0)-dt);
     if(!hasEnemy||p.gloomRest>0||p.gloomPulseTimer>0)return;
     if(!p.gloomShotsLeft)p.gloomShotsLeft=3;
-    const c=cellCenter(p.row,p.col),targets=state.zombies.filter(z=>z.alive&&Math.abs(z.x-c.x)<=GRID.cw*1.5&&Math.abs(z.y-c.y)<=GRID.ch*1.5);
+    const c=cellCenter(p.row,p.col),targets=state.zombies.filter(z=>enemyZombie(z)&&Math.abs(z.x-c.x)<=GRID.cw*1.5&&Math.abs(z.y-c.y)<=GRID.ch*1.5);
     if(!targets.length)return;
     p.attackAnim=.34;
     const damage=p.fusionId?Core.damageFor(p):28;
@@ -302,11 +325,12 @@
     if((ability.heal||p.genes.includes("heal"))&&def.body!=="producer"){p.healTraitTimer=(p.healTraitTimer||3)-dt;if(p.healTraitTimer<=0){const c=cellCenter(p.row,p.col);for(const ally of state.plants)if(ally.alive&&Math.abs(ally.row-p.row)<=1&&Math.abs(ally.col-p.col)<=2)healPlant(ally,65*p.rank);burstParticles(c.x,c.y,"#ffb8d7",15,55);p.healTraitTimer=7;}}
     if(!chomper&&(ability.devour||p.genes.includes("devour"))&&def.body!=="melee"){p.devourTraitTimer=(p.devourTraitTimer||4)-dt;if(p.devourTraitTimer<=0){chomp(p);p.devourTraitTimer=8;}}
     if(p.genes.includes("nova")&&def.body!=="shooter"){p.novaTraitTimer=(p.novaTraitTimer||6)-dt;if(p.novaTraitTimer<=0){const c=cellCenter(p.row,p.col);explosion(c.x,c.y,105,150*p.rank,"#9a65ff");p.novaTraitTimer=9;}}
-    if(p.genes.includes("deepfreeze")&&def.body!=="shooter"){p.freezeTraitTimer=(p.freezeTraitTimer||5)-dt;if(p.freezeTraitTimer<=0){const c=cellCenter(p.row,p.col);for(const z of state.zombies)if(z.alive&&Math.abs(z.x-c.x)<165){z.slow=Math.max(z.slow,4);z.stun=Math.max(z.stun,.45);}burstParticles(c.x,c.y,"#d8fbff",18,70);p.freezeTraitTimer=8;}}
-    if(p.genes.includes("reveal")&&def.body!=="shooter"&&def.body!=="producer")for(const z of state.zombies)if(z.alive&&z.air&&Math.abs(z.x-cellCenter(p.row,p.col).x)<360){z.grounded=Math.max(z.grounded,1);z.revealed=2;}
+    if(p.genes.includes("deepfreeze")&&def.body!=="shooter"){p.freezeTraitTimer=(p.freezeTraitTimer||5)-dt;if(p.freezeTraitTimer<=0){const c=cellCenter(p.row,p.col);for(const z of state.zombies)if(enemyZombie(z)&&Math.abs(z.x-c.x)<165){z.slow=Math.max(z.slow,4);z.stun=Math.max(z.stun,.45);}burstParticles(c.x,c.y,"#d8fbff",18,70);p.freezeTraitTimer=8;}}
+    if(p.genes.includes("reveal")&&def.body!=="shooter"&&def.body!=="producer")for(const z of state.zombies)if(enemyZombie(z)&&z.air&&Math.abs(z.x-cellCenter(p.row,p.col).x)<360){z.grounded=Math.max(z.grounded,1);z.revealed=2;}
   }
   function shoot(p,scale=1) {
     if((isChomperPlant(p)&&p.fusionId)||isAshThreepeater(p))return;
+    if(p.baseId==="cattail"){shootCattail(p,scale);return;}
     if(isThreepeaterPlant(p)){shootThreepeater(p,scale);return;}
     const c=cellCenter(p.row,p.col), def=plantDef(p); p.attackCount++;p.attackAnim=.26;
     const ability=def.abilities||{},authoredCount=ability.shotCount>1?ability.shotCount:0;
@@ -330,6 +354,14 @@
     }
     sfx("shoot");
   }
+  function shootCattail(p,scale=1){
+    const c=cellCenter(p.row,p.col),def=plantDef(p),targets=state.zombies.filter(enemyZombie).sort((a,b)=>Number(b.air)-Number(a.air)||(a.x-b.x)),target=targets[0];
+    if(!target)return;
+    p.attackCount++;p.attackAnim=.32;
+    const dx=target.x-c.x,dy=target.y-c.y,length=Math.max(1,Math.hypot(dx,dy)),speed=330;
+    state.bullets.push({x:c.x+18,y:c.y-15,lineY:null,row:p.row,vx:dx/length*speed,vy:dy/length*speed,spin:0,kind:"cattail",homing:true,targetId:target.id,damage:Math.max(1,Core.damageFor(p)*scale),frost:p.genes.includes("frost"),deepfreeze:p.genes.includes("deepfreeze"),sunny:false,sunnyGuaranteed:false,sunValue:0,burst:false,stun:false,fire:p.genes.includes("fire"),gust:false,crit:true,light:false,magnet:false,splash:false,knockback:false,bounce:false,hitsLeft:1,hitIds:[],alive:true,life:4,color:def.color});
+    sfx("shoot");
+  }
   function shootThreepeater(p,scale=1){
     const c=cellCenter(p.row,p.col),def=plantDef(p),ability=def.abilities||{},rows=threepeaterRows(p),shotsPerRow=threepeaterShotsPerRow(p),ignited=ability.fire||p.genes.includes("fire")||p.genes.includes("ignite");p.attackCount++;p.attackAnim=.32;
     for(const row of rows){const launchY=cellCenter(row,p.col).y-9;for(let i=0;i<shotsPerRow;i++)state.bullets.push({x:c.x+26-i*9,y:launchY,lineY:launchY,row,vx:290,vy:0,spin:0,kind:"threepeater",damage:Math.max(1,Core.damageFor(p)*scale),frost:ability.freeze||p.genes.includes("frost"),deepfreeze:p.genes.includes("deepfreeze"),sunny:false,sunnyGuaranteed:false,sunValue:0,burst:Boolean(ability.splash),stun:Boolean(ability.stun),fire:ignited,gust:p.genes.includes("gust"),crit:p.genes.includes("crit"),light:false,magnet:false,splash:Boolean(ability.splash),knockback:Boolean(ability.knockback),bounce:false,hitsLeft:ability.pierce?99:p.genes.includes("pierce")?2:1,hitIds:[],alive:true,life:4,color:ignited?"#ff704d":def.color});}
@@ -338,22 +370,22 @@
   function produce(p) {
     const c=cellCenter(p.row,p.col), value=25+(p.rank-1)*10;p.attackAnim=.55; spawnSun(c.x,c.y-38,value,false);
     if(p.baseId==="lotus"||p.genes.includes("heal"))for(const ally of state.plants)if(ally.alive&&Math.abs(ally.row-p.row)<=1&&Math.abs(ally.col-p.col)<=2)healPlant(ally,90*p.rank);
-    if(p.baseId==="lantern")for(const z of state.zombies)if(z.alive&&Math.abs(z.x-c.x)<560&&z.air){z.grounded=Math.max(z.grounded||0,5);z.revealed=3;burstParticles(z.x,z.y-25,"#ffe882",8,40);}
+    if(p.baseId==="lantern")for(const z of state.zombies)if(enemyZombie(z)&&Math.abs(z.x-c.x)<560&&z.air){z.grounded=Math.max(z.grounded||0,5);z.revealed=3;burstParticles(z.x,z.y-25,"#ffe882",8,40);}
     if(p.genes.includes("shooter")||p.genes.includes("pierce")||p.baseId==="lantern")for(let i=0;i<(p.baseId==="lantern"?2:3);i++)state.bullets.push({x:c.x+18-i*9,y:c.y-12,lineY:c.y-12,row:p.row,vx:270,vy:0,spin:0,kind:p.baseId==="lantern"?"light":"seed",damage:(p.baseId==="lantern"?18:10)*p.rank,frost:false,sunny:false,stun:p.genes.includes("stun"),fire:p.genes.includes("fire"),light:p.baseId==="lantern"||p.genes.includes("reveal"),hitsLeft:p.genes.includes("pierce")?2:1,hitIds:[],alive:true,life:4,color:"#f2d35d"});
   }
   function supportPulse(p){
     p.attackAnim=.5;const c=cellCenter(p.row,p.col);
-    if(p.baseId==="torchwood"){state.effects.push({type:"flameAura",x:c.x,y:c.y,life:.65,max:.65,color:"#ff9a46"});for(const z of state.zombies)if(z.alive&&z.row===p.row&&Math.abs(z.x-c.x)<85){z.burn=Math.max(z.burn,2.5);z.hp-=30*p.rank;}return;}
+    if(p.baseId==="torchwood"){state.effects.push({type:"flameAura",x:c.x,y:c.y,life:.65,max:.65,color:"#ff9a46"});for(const z of state.zombies)if(enemyZombie(z)&&z.row===p.row&&Math.abs(z.x-c.x)<85){z.burn=Math.max(z.burn,2.5);z.hp-=30*p.rank;}return;}
     if(p.baseId==="coffee"){for(const ally of state.plants)if(ally.alive&&Math.abs(ally.row-p.row)<=1&&Math.abs(ally.col-p.col)<=1)ally.timer=Math.max(0,ally.timer-.9);burstParticles(c.x,c.y,"#d7a878",16,65);return;}
-    if(p.baseId==="pineFurnace"){state.effects.push({type:"flameAura",x:c.x,y:c.y,life:.65,max:.65,color:"#ff9a46"});for(const z of state.zombies)if(z.alive&&Math.abs(z.x-c.x)<GRID.cw*1.5&&Math.abs(z.y-c.y)<GRID.ch*1.5){z.burn=Math.max(z.burn,3);z.hp-=36*p.rank;if(z.hp<=0)killZombie(z);}return;}
-    const targets=state.zombies.filter(z=>z.alive&&Math.abs(z.x-c.x)<610&&z.metal).sort((a,b)=>Math.abs(a.x-c.x)-Math.abs(b.x-c.x));const target=targets[0];if(!target){p.timer=Math.min(p.timer,2.2);return;}if(!target.metalStripped){const strip=Math.min(target.hp-1,Math.max(90,target.maxHp*.3));target.hp-=strip;target.metalStripped=true;target.revealed=4;floater(target.x,target.y-75,"护甲剥离","#9cf4ff");state.effects.push({type:"magnet",x:c.x,y:c.y,tx:target.x,ty:target.y-25,life:.55,max:.55,color:"#f16a67"});burstParticles(target.x,target.y-25,"#b8d8dc",18,90);tone(180,.22,"sawtooth",.025,260);}else{target.stun=Math.max(target.stun,.65);target.hp-=35*p.rank;}}
+    if(p.baseId==="pineFurnace"){state.effects.push({type:"flameAura",x:c.x,y:c.y,life:.65,max:.65,color:"#ff9a46"});for(const z of state.zombies)if(enemyZombie(z)&&Math.abs(z.x-c.x)<GRID.cw*1.5&&Math.abs(z.y-c.y)<GRID.ch*1.5){z.burn=Math.max(z.burn,3);z.hp-=36*p.rank;if(z.hp<=0)killZombie(z);}return;}
+    const targets=state.zombies.filter(z=>enemyZombie(z)&&Math.abs(z.x-c.x)<610&&z.metal).sort((a,b)=>Math.abs(a.x-c.x)-Math.abs(b.x-c.x));const target=targets[0];if(!target){p.timer=Math.min(p.timer,2.2);return;}if(!target.metalStripped){const strip=Math.min(target.hp-1,Math.max(90,target.maxHp*.3));target.hp-=strip;target.metalStripped=true;target.revealed=4;floater(target.x,target.y-75,"护甲剥离","#9cf4ff");state.effects.push({type:"magnet",x:c.x,y:c.y,tx:target.x,ty:target.y-25,life:.55,max:.55,color:"#f16a67"});burstParticles(target.x,target.y-25,"#b8d8dc",18,90);tone(180,.22,"sawtooth",.025,260);}else{target.stun=Math.max(target.stun,.65);target.hp-=35*p.rank;}}
   function fireChomperBullet(p,damage){
     const c=cellCenter(p.row,p.col),def=plantDef(p),ability=def.abilities||{};
     state.bullets.push({x:c.x+30,y:c.y-8,lineY:c.y-8,row:p.row,vx:290,vy:0,spin:0,kind:"chompSeed",damage,frost:Boolean(ability.freeze),deepfreeze:p.genes.includes("deepfreeze"),sunny:false,sunnyGuaranteed:false,sunValue:0,burst:Boolean(ability.splash),stun:Boolean(ability.stun),fire:Boolean(ability.fire),gust:false,crit:false,light:false,magnet:false,splash:Boolean(ability.splash),knockback:Boolean(ability.knockback),bounce:false,hitsLeft:ability.pierce?99:1,hitIds:[],alive:true,life:4,color:def.color});
     sfx("shoot");
   }
   function chomp(p){
-    const c=cellCenter(p.row,p.col),target=state.zombies.filter(z=>z.alive&&!z.air&&z.row===p.row&&z.x>c.x-22&&z.x<c.x+138).sort((a,b)=>a.x-b.x)[0];
+    const c=cellCenter(p.row,p.col),target=state.zombies.filter(z=>enemyZombie(z)&&!z.air&&z.row===p.row&&z.x>c.x-22&&z.x<c.x+138).sort((a,b)=>a.x-b.x)[0];
     if(!target){p.timer=.22;return;}
     p.attackAnim=.72;state.effects.push({type:"chomp",x:target.x,y:target.y-18,life:.42,max:.42,color:"#dd7ad0"});
     if(p.fusionId&&isChomperPlant(p)){
@@ -363,16 +395,16 @@
       else floater(target.x,target.y-72,`啃咬 ${rule.biteDamage}`,"#ffd1f5");
       if(target.hp<=0)killZombie(target);p.timer=rule.biteInterval;tone(125,.16,"sawtooth",.026,-55);return;
     }
-    if(target.kind!=="giant"&&target.maxHp<1800){target.hp=0;killZombie(target);floater(target.x,target.y-74,"吞噬!","#ffd1f5");p.timer=Math.max(5.5,plantDef(p).interval-(p.rank-1));}
+    if(!ZOMBIE_DEFS[target.kind].giant&&target.maxHp<1800){target.hp=0;killZombie(target);floater(target.x,target.y-74,"吞噬!","#ffd1f5");p.timer=Math.max(5.5,plantDef(p).interval-(p.rank-1));}
     else{target.hp-=120*p.rank;target.stun=Math.max(target.stun,.55);if(target.hp<=0)killZombie(target);p.timer=2.4;}tone(125,.16,"sawtooth",.026,-55);
   }
-  function spikeAttack(p){const c=cellCenter(p.row,p.col),targets=state.zombies.filter(z=>z.alive&&!z.air&&z.row===p.row&&Math.abs(z.x-c.x)<54);if(!targets.length){p.timer=.18;return;}p.attackAnim=.26;for(const z of targets){z.hp-=Core.damageFor(p)*p.rank;z.hit=1;if(p.baseId==="snowThorn"||p.genes.includes("frost"))z.slow=Math.max(z.slow,2.5);if(z.hp<=0)killZombie(z);}burstParticles(c.x,c.y+18,"#d9e2b2",7,38);}
-  function mostDangerousRow(){let best=0,score=-1;for(let r=0;r<5;r++){const s=state.zombies.filter(z=>z.alive&&z.row===r).reduce((a,z)=>a+(1100-z.x),0);if(s>score){score=s;best=r;}}return best;}
-  function explodePlant(p){const c=cellCenter(p.row,p.col);p.attackAnim=.6;if(p.baseId==="pepper")lineExplosion(p.row,Core.damageFor(p)||620);else if(p.baseId==="doom"){state.effects.push({type:"doom",x:c.x,y:c.y,life:1,max:1,color:"#9a65ff"});explosion(c.x,c.y,285,Core.damageFor(p)||1380,"#8a4dff");state.cameraShake=15;}else if(p.baseId==="iceShroom"){globalFreeze(c.x,c.y,Core.damageFor(p)||60);}else if(p.baseId==="blover"){sfx("freeze");state.effects.push({type:"gust",x:c.x,y:c.y,life:1,max:1,color:"#b8ffd1"});for(const z of state.zombies)if(z.alive&&z.air){z.hp-=Math.max(180,z.maxHp*.42);z.grounded=7;z.x+=210;z.stun=1.3;if(z.hp<=0)killZombie(z);}burstParticles(c.x,c.y,"#b8ffd1",50,170);}else explosion(c.x,c.y,150,Core.damageFor(p)||900);p.alive=false;}
-  function lineExplosion(row,damage){state.cameraShake=10;sfx("boom");for(let x=GRID.x;x<1240;x+=58)burstParticles(x,GRID.y+row*GRID.ch+GRID.ch/2,"#ff704d",5,110);for(const z of state.zombies)if(z.alive&&z.row===row){z.hp-=damage;z.hit=1;z.burn=3;if(z.hp<=0)killZombie(z);}}
-  function explosion(x,y,radius,damage,color="#ef5c61"){state.cameraShake=9;sfx("boom");state.effects.push({type:"ring",x,y,life:.55,max:.55,color});burstParticles(x,y,"#ffbc62",46,210);burstParticles(x,y,color,34,150);for(const z of state.zombies)if(z.alive&&Math.hypot(z.x-x,z.y-y)<radius){z.hp-=damage;z.hit=1;if(z.hp<=0)killZombie(z);}}
-  function globalFreeze(x,y,damage){sfx("freeze");state.effects.push({type:"freeze",x,y,life:1.1,max:1.1,color:"#baf7ff"});for(const z of state.zombies)if(z.alive){z.hp-=damage;z.stun=Math.max(z.stun,4.2);z.slow=Math.max(z.slow,7);z.grounded=Math.max(z.grounded||0,4.2);if(z.hp<=0)killZombie(z);}for(let i=0;i<80;i++)burstParticles(Math.random()*W,100+Math.random()*470,"#d8fbff",1,45);}
-  function splashImpact(x,y,radius,damage){burstParticles(x,y,"#9adb76",9,65);for(const z of state.zombies)if(z.alive&&Math.hypot(z.x-x,z.y-y)<radius){z.hp-=damage;z.hit=1;if(z.hp<=0)killZombie(z);}}
+  function spikeAttack(p){const c=cellCenter(p.row,p.col),targets=state.zombies.filter(z=>enemyZombie(z)&&!z.air&&z.row===p.row&&Math.abs(z.x-c.x)<54);if(!targets.length){p.timer=.18;return;}p.attackAnim=.26;for(const z of targets){if(ZOMBIE_DEFS[z.kind].vehicle){killZombie(z);if(p.baseId==="spikeweed")p.alive=false;else damagePlant(p,300);floater(c.x,c.y-52,"刺破载具!","#e8f0be");continue;}z.hp-=Core.damageFor(p)*p.rank;z.hit=1;if(p.baseId==="snowThorn"||p.genes.includes("frost"))z.slow=Math.max(z.slow,2.5);if(z.hp<=0)killZombie(z);}burstParticles(c.x,c.y+18,"#d9e2b2",7,38);}
+  function mostDangerousRow(){let best=0,score=-1;for(let r=0;r<5;r++){const s=state.zombies.filter(z=>enemyZombie(z)&&z.row===r).reduce((a,z)=>a+(1100-z.x),0);if(s>score){score=s;best=r;}}return best;}
+  function explodePlant(p){const c=cellCenter(p.row,p.col);p.attackAnim=.6;if(p.baseId==="pepper")lineExplosion(p.row,Core.damageFor(p)||620);else if(p.baseId==="doom"){state.effects.push({type:"doom",x:c.x,y:c.y,life:1,max:1,color:"#9a65ff"});explosion(c.x,c.y,285,Core.damageFor(p)||1380,"#8a4dff");state.cameraShake=15;}else if(p.baseId==="iceShroom"){globalFreeze(c.x,c.y,Core.damageFor(p)||60);}else if(p.baseId==="blover"){sfx("freeze");state.effects.push({type:"gust",x:c.x,y:c.y,life:1,max:1,color:"#b8ffd1"});for(const z of state.zombies)if(enemyZombie(z)&&z.air){z.hp-=Math.max(180,z.maxHp*.42);z.grounded=7;z.x+=210;z.stun=1.3;if(z.hp<=0)killZombie(z);}burstParticles(c.x,c.y,"#b8ffd1",50,170);}else explosion(c.x,c.y,150,Core.damageFor(p)||900);p.alive=false;}
+  function lineExplosion(row,damage){state.cameraShake=10;sfx("boom");for(let x=GRID.x;x<1240;x+=58)burstParticles(x,GRID.y+row*GRID.ch+GRID.ch/2,"#ff704d",5,110);for(const z of state.zombies)if(enemyZombie(z)&&z.row===row){z.hp-=damage;z.hit=1;z.burn=3;if(z.hp<=0)killZombie(z);}}
+  function explosion(x,y,radius,damage,color="#ef5c61"){state.cameraShake=9;sfx("boom");state.effects.push({type:"ring",x,y,life:.55,max:.55,color});burstParticles(x,y,"#ffbc62",46,210);burstParticles(x,y,color,34,150);for(const z of state.zombies)if(enemyZombie(z)&&Math.hypot(z.x-x,z.y-y)<radius){z.hp-=damage;z.hit=1;if(z.hp<=0)killZombie(z);}}
+  function globalFreeze(x,y,damage){sfx("freeze");state.effects.push({type:"freeze",x,y,life:1.1,max:1.1,color:"#baf7ff"});for(const z of state.zombies)if(enemyZombie(z)){z.hp-=damage;z.stun=Math.max(z.stun,4.2);z.slow=Math.max(z.slow,7);z.grounded=Math.max(z.grounded||0,4.2);if(z.hp<=0)killZombie(z);}for(let i=0;i<80;i++)burstParticles(Math.random()*W,100+Math.random()*470,"#d8fbff",1,45);}
+  function splashImpact(x,y,radius,damage){burstParticles(x,y,"#9adb76",9,65);for(const z of state.zombies)if(enemyZombie(z)&&Math.hypot(z.x-x,z.y-y)<radius){z.hp-=damage;z.hit=1;if(z.hp<=0)killZombie(z);}}
 
   const ZOMBIE_DEFS={
     basic:{hp:270,speed:18,color:"#8eb38c"},flag:{hp:270,speed:18,color:"#b46f68"},cone:{hp:640,speed:18,color:"#dca14a",armored:true},pole:{hp:500,speed:40,color:"#94ad87",metal:true,vault:true},bucket:{hp:1370,speed:18,color:"#a9b6b4",metal:true,armored:true},paper:{hp:420,speed:18,color:"#a0b59b",rage:1.7},screen:{hp:1370,speed:18,color:"#7fa09b",metal:true,armored:true},football:{hp:1670,speed:50,color:"#a87070",metal:true,armored:true},
@@ -395,17 +427,22 @@
     const veteran=Object.keys(ZOMBIE_DEFS).filter(id=>ZOMBIE_ALMANAC[id].firstWave<=Math.min(10,Math.ceil(wave/1.4))),rotation=wave%7;
     return veteran.filter((_,i)=>(i+rotation)%3!==0).concat(wave%4===0?["blackMammoth"]:[],wave%3===0?["gatlingVehicle"]:[]);
   }
-  function makeZombie(kind,row,x){const d=ZOMBIE_DEFS[kind],beyond=Math.max(0,state.wave-1),hpScale=1+beyond*.075+Math.floor(beyond/10)*.12,speedScale=1+Math.min(.65,beyond*.012),hp=Math.round(d.hp*hpScale);return{id:state.nextUid++,row,x:x??1185+Math.random()*45,y:GRID.y+row*GRID.ch+GRID.ch/2,hp,maxHp:hp,speed:d.speed*speedScale,kind,color:d.color,metal:Boolean(d.metal),air:Boolean(d.air),alive:true,attackTimer:0,attackAnim:0,healTimer:2.8,summonTimer:5,shotTimer:1.2,hit:0,slow:0,stun:0,burn:0,poison:0,weaken:0,grounded:0,revealed:0,slam:0,slamHit:false,vaulted:false,vaultAnim:0,step:Math.random()*TAU};}
+  function makeZombie(kind,row,x){const d=ZOMBIE_DEFS[kind],beyond=Math.max(0,state.wave-1),hpScale=1+beyond*.075+Math.floor(beyond/10)*.12,speedScale=1+Math.min(.65,beyond*.012),hp=Math.round(d.hp*hpScale);return{id:state.nextUid++,row,x:x??1185+Math.random()*45,y:GRID.y+row*GRID.ch+GRID.ch/2,hp,maxHp:hp,speed:d.speed*speedScale,kind,color:d.color,metal:Boolean(d.metal),air:Boolean(d.air),alive:true,charmed:false,submerged:Boolean(d.stealth),attackTimer:0,attackAnim:0,healTimer:2.8,summonTimer:5,shotTimer:1.2,bungeeTimer:1.35,age:0,impThrown:false,hit:0,slow:0,stun:0,burn:0,poison:0,weaken:0,grounded:0,revealed:0,slam:0,slamHit:false,vaulted:false,vaultAnim:0,step:Math.random()*TAU};}
   function spawnZombie(){const row=Math.floor(Math.random()*5),pool=poolForWave(state.wave),kind=pool[Math.floor(Math.random()*pool.length)],d=ZOMBIE_DEFS[kind],x=d.burrow?790+Math.random()*120:d.bungee?650+Math.random()*260:undefined;state.zombieKindsSeen.add(kind);state.zombies.push(makeZombie(kind,row,x));}
   function updateZombies(dt){
-    for(const z of state.zombies){if(!z.alive)continue;z.hit=Math.max(0,z.hit-dt*5);z.slow=Math.max(0,z.slow-dt);z.stun=Math.max(0,(z.stun||0)-dt);z.poison=Math.max(0,(z.poison||0)-dt);z.weaken=Math.max(0,(z.weaken||0)-dt);z.grounded=Math.max(0,(z.grounded||0)-dt);z.revealed=Math.max(0,(z.revealed||0)-dt);z.attackAnim=Math.max(0,(z.attackAnim||0)-dt);z.step+=dt*5;
+    for(const z of state.zombies){if(!z.alive)continue;z.age+=dt;z.hit=Math.max(0,z.hit-dt*5);z.slow=Math.max(0,z.slow-dt);z.stun=Math.max(0,(z.stun||0)-dt);z.poison=Math.max(0,(z.poison||0)-dt);z.weaken=Math.max(0,(z.weaken||0)-dt);z.grounded=Math.max(0,(z.grounded||0)-dt);z.revealed=Math.max(0,(z.revealed||0)-dt);z.attackAnim=Math.max(0,(z.attackAnim||0)-dt);z.step+=dt*5;
       if(z.burn>0){z.burn-=dt;z.hp-=18*dt;if(z.hp<=0){killZombie(z);continue;}}
       const zombieDef=ZOMBIE_DEFS[z.kind];
+      if(z.charmed){updateCharmedZombie(z,dt);continue;}
+      if(zombieDef.bungee){z.bungeeTimer-=dt;if(z.bungeeTimer<=0){const victim=state.plants.filter(p=>p.alive&&p.row===z.row).sort((a,b)=>Math.abs(cellCenter(a.row,a.col).x-z.x)-Math.abs(cellCenter(b.row,b.col).x-z.x))[0];if(victim){const c=cellCenter(victim.row,victim.col);if(umbrellaProtects(victim)){floater(c.x,c.y-58,"保护伞弹开!","#d9ffb3");burstParticles(c.x,c.y,"#a9e58e",22,90);}else{victim.alive=false;floater(c.x,c.y-58,"被蹦极偷走!","#ffc4dc");burstParticles(c.x,c.y,"#c792d8",22,90);}}z.alive=false;}continue;}
+      if(zombieDef.stealth){const nearPlant=state.plants.some(p=>p.alive&&p.row===z.row&&Math.abs(cellCenter(p.row,p.col).x-z.x)<105);z.submerged=!nearPlant;}
+      if(zombieDef.giant&&!z.impThrown&&z.hp<=z.maxHp*.5&&state.zombies.length<55){z.impThrown=true;const imp=makeZombie("imp",z.row,z.x-95);imp.speed*=1.18;state.zombies.push(imp);state.effects.push({type:"arc",x:z.x,y:z.y-45,tx:imp.x,ty:imp.y,life:.65,max:.65,color:"#d6b67a"});floater(z.x,z.y-90,"投掷小鬼!","#f2d59a");sfx("vault");}
       if(zombieDef.summon){z.summonTimer-=dt;if(z.summonTimer<=0&&state.zombies.length<55){state.zombies.push(makeZombie(zombieDef.summon,z.row,z.x+48));z.summonTimer=6;burstParticles(z.x,z.y-28,"#c9a5e8",12,55);}}
       if(z.stun>0)continue;
       if(z.vaultAnim>0){z.vaultAnim=Math.max(0,z.vaultAnim-dt);const t=1-z.vaultAnim/.72,ease=t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2;z.x=z.vaultFrom+(z.vaultTo-z.vaultFrom)*ease;continue;}
       const airborne=z.air&&z.grounded<=0;
       const target=airborne?null:state.plants.filter(p=>p.alive&&p.row===z.row&&plantDef(p).body!=="trap").sort((a,b)=>b.col-a.col).find(p=>cellCenter(p.row,p.col).x<z.x+12&&z.x-cellCenter(p.row,p.col).x<58);
+      if(target&&zombieDef.vehicle){const tc=cellCenter(target.row,target.col);target.alive=false;z.attackAnim=.45;state.effects.push({type:"impact",x:tc.x,y:tc.y+18,life:.48,max:.48,color:"#b7cad0"});burstParticles(tc.x,tc.y,"#a6b8b5",24,125);floater(tc.x,tc.y-62,"碾压!","#ffd1ad");sfx("slam");continue;}
       if(target&&zombieDef.vault&&!z.vaulted&&target.baseId!=="tallnut"&&!target.genes.includes("tall")){z.vaulted=true;z.vaultAnim=.72;z.vaultFrom=z.x;z.vaultTo=cellCenter(target.row,target.col).x-70;z.attackTimer=.7;sfx("vault");state.effects.push({type:"arc",x:z.x,y:z.y,tx:z.vaultTo,ty:z.y,life:.72,max:.72,color:"#f4d77a"});continue;}
       const rangedTarget=state.plants.filter(p=>p.alive&&p.row===z.row&&plantDef(p).body!=="trap"&&cellCenter(p.row,p.col).x<z.x).sort((a,b)=>b.col-a.col)[0];
       if(!target&&zombieDef.ranged&&rangedTarget&&z.x-cellCenter(rangedTarget.row,rangedTarget.col).x<560){
@@ -413,8 +450,8 @@
         if(z.shotTimer<=0){
           const shots=zombieDef.burstCount||1,damage=zombieDef.ranged,impact=cellCenter(rangedTarget.row,rangedTarget.col);
           for(let i=0;i<shots;i++){
-            damagePlant(rangedTarget,damage);
-            if(zombieDef.splash){for(const nearby of state.plants)if(nearby.alive&&nearby!==rangedTarget&&Math.abs(nearby.row-rangedTarget.row)<=1&&Math.abs(nearby.col-rangedTarget.col)<=1)damagePlant(nearby,damage*.45);}
+            damagePlantFromProjectile(rangedTarget,damage,z.kind==="catapult");
+            if(zombieDef.splash){for(const nearby of state.plants)if(nearby.alive&&nearby!==rangedTarget&&Math.abs(nearby.row-rangedTarget.row)<=1&&Math.abs(nearby.col-rangedTarget.col)<=1)damagePlantFromProjectile(nearby,damage*.45,true);}
             state.effects.push({type:"arc",x:z.x-20,y:z.y-20,tx:impact.x,ty:impact.y,life:.18+i*.04,max:.18+i*.04,color:zombieDef.splash?"#d8a65b":"#8ecb65"});
           }
           z.attackAnim=.4;z.shotTimer=1.5;sfx("shoot");
@@ -426,22 +463,62 @@
         if(z.attackTimer<=0&&z.slam<=0){z.attackTimer=1.7;z.slam=1.7;z.slamHit=false;sfx("slamWind");}
         if(z.slam>0){z.slam=Math.max(0,z.slam-dt);if(!z.slamHit&&z.slam<=.56){let smash=zombieDef.bite||150;if(z.weaken>0)smash*=.65;damagePlant(target,smash);z.slamHit=true;state.cameraShake=11;state.effects.push({type:"impact",x:cellCenter(target.row,target.col).x,y:cellCenter(target.row,target.col).y+20,life:.5,max:.5,color:"#e4c38a"});burstParticles(cellCenter(target.row,target.col).x,cellCenter(target.row,target.col).y+20,"#d6b67a",28,150);sfx("slam");}}
       }
-      else if(target){z.attackTimer-=dt;if(z.attackTimer<=0){const tc=cellCenter(target.row,target.col);if(zombieDef.exploder){const damage=zombieDef.bite||500;if(zombieDef.exploder==="line"){for(const p of state.plants)if(p.alive&&p.row===z.row)damagePlant(p,damage);}else if(zombieDef.exploder==="doom"){for(const p of state.plants)if(p.alive&&Math.abs(p.row-z.row)<=1&&Math.abs(cellCenter(p.row,p.col).x-z.x)<GRID.cw*2.2)damagePlant(p,damage);}else{for(const p of state.plants)if(p.alive&&Math.hypot(cellCenter(p.row,p.col).x-z.x,cellCenter(p.row,p.col).y-z.y)<GRID.cw*1.4)damagePlant(p,damage);}state.effects.push({type:"doom",x:z.x,y:z.y,life:.8,max:.8,color:zombieDef.exploder==="doom"?"#8a4dff":"#ff704d"});z.alive=false;state.cameraShake=12;sfx("boom");continue;}let bite=zombieDef.bite||50;if(z.weaken>0)bite*=.65;damagePlant(target,bite);z.attackAnim=.34;state.effects.push({type:"bite",x:tc.x+30,y:tc.y-5,life:.28,max:.28,color:"#f4e2bd"});if(target.genes.includes("spike")){z.hp-=45;z.hit=1;if(z.hp<=0)killZombie(z);}if(zombieDef.ice)target.freeze=Math.max(target.freeze||0,1.5);if(target.baseId==="garlic"||target.baseId==="hypno"||target.genes.includes("weaken")){z.weaken=3;if(Math.random()<.32)z.row=Math.max(0,Math.min(4,z.row+(z.row===4?-1:z.row===0?1:Math.random()<.5?-1:1)));}z.attackTimer=.5;sfx("bite");}}
-      else z.x-=z.speed*(z.slow>0?.55:1)*(zombieDef.rage&&z.hp<z.maxHp*.5?zombieDef.rage:1)*dt;
+      else if(target){
+        z.attackTimer-=dt;
+        if(z.attackTimer<=0){
+          const tc=cellCenter(target.row,target.col);
+          if(zombieDef.exploder){
+            const damage=zombieDef.bite||500;
+            if(zombieDef.exploder==="line"){for(const p of state.plants)if(p.alive&&p.row===z.row)damagePlant(p,damage);}
+            else if(zombieDef.exploder==="doom"){for(const p of state.plants)if(p.alive&&Math.abs(p.row-z.row)<=1&&Math.abs(cellCenter(p.row,p.col).x-z.x)<GRID.cw*2.2)damagePlant(p,damage);}
+            else{for(const p of state.plants)if(p.alive&&Math.hypot(cellCenter(p.row,p.col).x-z.x,cellCenter(p.row,p.col).y-z.y)<GRID.cw*1.4)damagePlant(p,damage);}
+            state.effects.push({type:"doom",x:z.x,y:z.y,life:.8,max:.8,color:zombieDef.exploder==="doom"?"#8a4dff":"#ff704d"});z.alive=false;state.cameraShake=12;sfx("boom");continue;
+          }
+          if(target.baseId==="hypno"&&!target.fusionId){target.alive=false;z.charmed=true;z.air=false;z.grounded=9;z.stun=.25;z.attackTimer=.5;floater(tc.x,tc.y-62,"魅惑成功!","#ff9fe5");burstParticles(tc.x,tc.y,"#ef8bd8",30,110);tone(420,.25,"sine",.03,180);continue;}
+          let bite=zombieDef.bite||50;if(z.weaken>0)bite*=.65;damagePlant(target,bite);z.attackAnim=.34;state.effects.push({type:"bite",x:tc.x+30,y:tc.y-5,life:.28,max:.28,color:"#f4e2bd"});
+          if(target.genes.includes("spike")){z.hp-=45;z.hit=1;if(z.hp<=0)killZombie(z);}
+          if(zombieDef.ice)target.freeze=Math.max(target.freeze||0,1.5);
+          if(target.baseId==="garlic"||target.genes.includes("weaken")){z.weaken=3;if(Math.random()<.32)z.row=Math.max(0,Math.min(4,z.row+(z.row===4?-1:z.row===0?1:Math.random()<.5?-1:1)));}
+          z.attackTimer=.5;sfx("bite");
+        }
+      }
+      else{const rush=z.kind==="zamboni"?1+Math.max(0,1-z.age/3)*2:1;z.x-=z.speed*rush*(z.slow>0?.55:1)*(zombieDef.rage&&z.hp<z.maxHp*.5?zombieDef.rage:1)*dt;}
       if(z.x<GRID.x-46){if(QA_MODE){z.alive=false;clearRow(z.row);}else if(state.mowers[z.row]>0){state.mowers[z.row]--;const left=state.mowers[z.row];z.alive=false;clearRow(z.row);toast(left>0?`第 ${z.row+1} 路推土机启动，还剩 ${left} 次机会`:`第 ${z.row+1} 路推土机已耗尽，下次突破将失败`);state.cameraShake=7;sfx("mower");}else{endGame();return;}}
     }
+  }
+  function updateCharmedZombie(z,dt){
+    if(z.stun>0)return;
+    const foe=state.zombies.filter(other=>enemyZombie(other)&&other!==z&&other.row===z.row&&other.x>z.x).sort((a,b)=>a.x-b.x)[0];
+    if(foe&&foe.x-z.x<58){z.attackTimer-=dt;if(z.attackTimer<=0){foe.hp-=65;foe.hit=1;z.attackAnim=.34;z.attackTimer=.5;state.effects.push({type:"bite",x:foe.x-24,y:foe.y-8,life:.28,max:.28,color:"#ef9bdc"});if(foe.hp<=0)killZombie(foe);sfx("bite");}}
+    else z.x+=z.speed*1.12*dt;
+    if(z.x>1245)z.alive=false;
+  }
+  function umbrellaProtects(plant){return state.plants.some(guard=>guard.alive&&hasPlantMaterial(guard,"umbrella")&&Math.abs(guard.row-plant.row)<=1&&Math.abs(guard.col-plant.col)<=1);}
+  function damagePlantFromProjectile(plant,amount,overhead=false){
+    if(overhead&&umbrellaProtects(plant)){const c=cellCenter(plant.row,plant.col);state.effects.push({type:"arc",x:c.x,y:c.y-50,tx:c.x+42,ty:c.y-95,life:.35,max:.35,color:"#b8ef9c"});burstParticles(c.x,c.y-35,"#b8ef9c",10,55);amount*=.25;}
+    damagePlant(plant,amount);
   }
   function damagePlant(p,amount){
     if(p.shield>0){const d=Math.min(p.shield,amount);p.shield-=d;amount-=d;}
     p.hp-=amount;p.hitFlash=1;p.retaliate=(p.retaliate||0)+1;
     if(p.genes.includes("producer")&&Math.random()<.08)spawnSun(cellCenter(p.row,p.col).x,cellCenter(p.row,p.col).y-20,5,false);
-    if(p.genes.includes("frost"))for(const z of state.zombies)if(z.alive&&z.row===p.row&&Math.abs(z.x-cellCenter(p.row,p.col).x)<75)z.slow=1.2;
+    if(p.genes.includes("frost"))for(const z of state.zombies)if(enemyZombie(z)&&z.row===p.row&&Math.abs(z.x-cellCenter(p.row,p.col).x)<75)z.slow=1.2;
     if(p.hp<=0){if(p.genes.includes("burst"))explosion(cellCenter(p.row,p.col).x,cellCenter(p.row,p.col).y,110,240);if(p.genes.includes("fire"))lineExplosion(p.row,180);p.alive=false;burstParticles(cellCenter(p.row,p.col).x,cellCenter(p.row,p.col).y,"#7d5a3a",15,90);}
   }
-  function clearRow(row){for(const z of state.zombies)if(z.alive&&z.row===row)killZombie(z);}
+  function clearRow(row){for(const z of state.zombies)if(enemyZombie(z)&&z.row===row)killZombie(z);}
   function killZombie(z){if(!z.alive)return;z.alive=false;state.stats.kills++;burstParticles(z.x,z.y,z.color,12,70);if(state.time-state.lastKillSoundAt>.08){state.lastKillSoundAt=state.time;sfx("kill");}}
 
-  function updateBullets(dt){for(const b of state.bullets){if(!b.alive)continue;b.x+=b.vx*dt;if(Number.isFinite(b.lineY))b.y=b.lineY;else b.y+=(b.vy||0)*dt;b.spin=(b.spin||0)+dt*7;b.life-=dt;if(b.bounce&&b.x<GRID.x-40){b.x=GRID.x-38;b.vx=Math.abs(b.vx);b.bounce=false;}if(b.life<=0||b.x>1250||b.x<GRID.x-40||b.y<GRID.y-30||b.y>GRID.y+GRID.rows*GRID.ch+20){b.alive=false;continue;}if(!b.fire){const torch=state.plants.find(p=>p.alive&&(p.baseId==="torchwood"||p.genes.includes("ignite"))&&p.row===b.row&&Math.abs(cellCenter(p.row,p.col).x-b.x)<17);if(torch){b.fire=true;b.damage*=2;b.color="#ff9148";torch.attackAnim=.36;state.effects.push({type:"ignite",x:b.x,y:b.y,life:.3,max:.3,color:"#ff9a46"});tone(360,.05,"triangle",.012,120);}}const hit=state.zombies.filter(z=>z.alive&&!b.hitIds.includes(z.id)&&Math.abs(z.x-b.x)<25&&Math.abs(z.y-b.y)<34).sort((a,c)=>a.x-c.x)[0];if(hit){let dealt=ZOMBIE_DEFS[hit.kind].armored&&!b.fire&&!b.burst&&!hit.metalStripped?b.damage*.82:b.damage;if(b.crit&&Math.random()<(b.light?.34:.22))dealt*=2;hit.hp-=dealt;hit.hit=1;if((b.light||b.crit)&&hit.air){hit.grounded=Math.max(hit.grounded,5);hit.revealed=4;floater(hit.x,hit.y-70,"击落","#fff2a0");}if(b.magnet&&!hit.metalStripped&&hit.metal){hit.metalStripped=true;hit.hp-=Math.min(hit.hp-1,hit.maxHp*.22);}if(b.frost&&zSlowable(hit))hit.slow=Math.max(hit.slow,b.deepfreeze?4.5:2.6);if(b.deepfreeze&&Math.random()<.22)hit.stun=Math.max(hit.stun,1.25);if(b.stun&&Math.random()<.3)hit.stun=Math.max(hit.stun,.8);if(b.fire)hit.burn=Math.max(hit.burn,3);if(b.knockback){hit.x+=34;hit.stun=Math.max(hit.stun,.18);}if(b.gust){hit.x+=34;hit.stun=Math.max(hit.stun,.18);if(hit.air)hit.grounded=Math.max(hit.grounded,2.5);}if(b.sunny&&(b.sunnyGuaranteed||Math.random()<.16))spawnSun(b.x,b.y,b.sunValue||5,false);if(b.burst)explosion(b.x,b.y,b.kind==="star"?92:72,b.kind==="star"?95:70,b.color);if(b.splash)splashImpact(b.x,b.y,58,Math.max(18,dealt*.45));burstParticles(b.x,b.y,b.color,7,55);b.hitIds.push(hit.id);b.hitsLeft--;if(b.hitsLeft<=0)b.alive=false;else b.x+=25;if(hit.hp<=0)killZombie(hit);}}}
+  function updateBullets(dt){
+    for(const b of state.bullets){if(!b.alive)continue;
+      if(b.homing){const target=state.zombies.find(z=>enemyZombie(z)&&z.id===b.targetId);if(target){const dx=target.x-b.x,dy=target.y-b.y,length=Math.max(1,Math.hypot(dx,dy)),speed=330;b.vx=dx/length*speed;b.vy=dy/length*speed;}else b.homing=false;}
+      b.x+=b.vx*dt;if(Number.isFinite(b.lineY))b.y=b.lineY;else b.y+=(b.vy||0)*dt;b.spin=(b.spin||0)+dt*7;b.life-=dt;
+      if(b.bounce&&b.x<GRID.x-40){b.x=GRID.x-38;b.vx=Math.abs(b.vx);b.bounce=false;}
+      if(b.life<=0||b.x>1250||b.x<GRID.x-40||b.y<GRID.y-30||b.y>GRID.y+GRID.rows*GRID.ch+20){b.alive=false;continue;}
+      if(!b.fire){const torch=state.plants.find(p=>p.alive&&(p.baseId==="torchwood"||p.genes.includes("ignite"))&&p.row===b.row&&Math.abs(cellCenter(p.row,p.col).x-b.x)<17);if(torch){b.fire=true;b.damage*=2;b.color="#ff9148";torch.attackAnim=.36;state.effects.push({type:"ignite",x:b.x,y:b.y,life:.3,max:.3,color:"#ff9a46"});tone(360,.05,"triangle",.012,120);}}
+      const lobbed=["cabbage","corn","melon","spruceBallista","cattail"].includes(b.kind),hit=state.zombies.filter(z=>enemyZombie(z)&&(!z.submerged||lobbed||b.splash||b.light)&&!b.hitIds.includes(z.id)&&Math.abs(z.x-b.x)<25&&Math.abs(z.y-b.y)<34).sort((a,c)=>a.x-c.x)[0];
+      if(hit){let dealt=ZOMBIE_DEFS[hit.kind].armored&&!b.fire&&!b.burst&&!hit.metalStripped?b.damage*.82:b.damage;if(b.crit&&Math.random()<(b.light?.34:.22))dealt*=2;hit.hp-=dealt;hit.hit=1;if((b.light||b.crit)&&hit.air){hit.grounded=Math.max(hit.grounded,5);hit.revealed=4;floater(hit.x,hit.y-70,"击落","#fff2a0");}if(b.magnet&&!hit.metalStripped&&hit.metal){hit.metalStripped=true;hit.hp-=Math.min(hit.hp-1,hit.maxHp*.22);}if(b.frost&&zSlowable(hit))hit.slow=Math.max(hit.slow,b.deepfreeze?4.5:2.6);if(b.deepfreeze&&Math.random()<.22)hit.stun=Math.max(hit.stun,1.25);if(b.stun&&Math.random()<.3)hit.stun=Math.max(hit.stun,.8);if(b.fire)hit.burn=Math.max(hit.burn,3);if(b.knockback){hit.x+=34;hit.stun=Math.max(hit.stun,.18);}if(b.gust){hit.x+=34;hit.stun=Math.max(hit.stun,.18);if(hit.air)hit.grounded=Math.max(hit.grounded,2.5);}if(b.sunny&&(b.sunnyGuaranteed||Math.random()<.16))spawnSun(b.x,b.y,b.sunValue||5,false);if(b.burst)explosion(b.x,b.y,b.kind==="star"?92:72,b.kind==="star"?95:70,b.color);if(b.splash)splashImpact(b.x,b.y,58,Math.max(18,dealt*.45));burstParticles(b.x,b.y,b.color,7,55);b.hitIds.push(hit.id);b.hitsLeft--;if(b.hitsLeft<=0)b.alive=false;else b.x+=25;if(hit.hp<=0)killZombie(hit);}
+    }
+  }
   function zSlowable(z){return !z.air||z.grounded>0;}
   function spawnSun(x,y,value,natural){state.suns.push({x,y:natural?-20:y,targetY:y,value,life:14,alive:true,vy:natural?105:0,phase:Math.random()*TAU});}
   function updateSuns(dt){for(const s of state.suns){s.life-=dt;s.phase+=dt*4;if(s.vy){s.y+=s.vy*dt;if(s.y>=s.targetY){s.y=s.targetY;s.vy=0;}}if(s.life<=8&&s.alive)collectSun(s,false);}}
@@ -519,9 +596,9 @@
     return true;
   }
   function drawPlantBody(p,x,y,alpha=1){
-    const def=plantDef(p),bob=Math.sin(p.age*2.2+p.bob)*2,attack=Math.sin(Math.min(1,(p.attackAnim||0)/.72)*Math.PI),name=p.fusionId?p.displayName:(def.short||def.name),sub=[p.fusionId?(def.abilities?.ultimate?"究极配方":"文件配方"):"",p.shield>0?"护盾":""].filter(Boolean).join(" · ");
+    const def=plantDef(p),bob=Math.sin(p.age*2.2+p.bob)*2,attack=Math.sin(Math.min(1,(p.attackAnim||0)/.72)*Math.PI),name=p.fusionId?p.displayName:(def.short||def.name),sub=[p.fusionId?(def.abilities?.ultimate?"究极配方":"文件配方"):"",p.shield>0?"护盾":"",p.scared?"害怕躲藏":"",p.baseId==="potato"&&!p.armed?"埋地准备":"",p.baseId==="kelp"?"潜伏水下":""].filter(Boolean).join(" · ");
     if(p.baseId==="star"||p.baseId==="gloom"){drawRadialPlant(p,x,y+bob-5*attack,alpha,name,sub,attack);return;}
-    drawTextEntity(`我是${name}`,x+(def.body==="shooter"?-5:0)*attack,y+bob-5*attack,p.hitFlash>0?"#ffffff":def.color,alpha,sub,92);
+    drawTextEntity(`我是${name}`,x+(def.body==="shooter"?-5:0)*attack,y+bob-5*attack+(p.baseId==="kelp"?18:0),p.hitFlash>0?"#ffffff":def.color,alpha,sub,92);
     if(p.fusionId==="ultimate004")drawDevourCharge(p,x,y,alpha);
   }
   function drawDevourCharge(p,x,y,alpha=1){
@@ -547,8 +624,8 @@
   function drawHp(p,x,y){if(p.hp===p.maxHp&&p.shield<=0)return;const baseRatio=Math.min(1,Math.max(0,p.hp/p.maxHp)),overRatio=Math.min(1,Math.max(0,(p.hp-p.maxHp)/(p.maxHp*3)));ctx.fillStyle="rgba(0,0,0,.35)";roundRect(x-28,y,56,5,3);ctx.fill();ctx.fillStyle=baseRatio>.35?"#93e36f":"#ef6a5d";roundRect(x-28,y,56*baseRatio,5,3);ctx.fill();if(overRatio>0){ctx.fillStyle="rgba(0,0,0,.42)";roundRect(x-28,y-7,56,4,2);ctx.fill();ctx.fillStyle="#ffd66b";roundRect(x-28,y-7,56*overRatio,4,2);ctx.fill();}}
   function drawZombieVector(z){ctx.save();ctx.translate(z.x,z.y);const leg=Math.sin(z.step)*6,giant=z.kind==="giant"?1.28:1;ctx.scale(giant,giant);ctx.strokeStyle="#5e735f";ctx.lineWidth=9;ctx.beginPath();ctx.moveTo(-8,20);ctx.lineTo(-12+leg,42);ctx.moveTo(8,20);ctx.lineTo(12-leg,42);ctx.stroke();ctx.fillStyle="#765d4a";roundRect(-24,-9,48,42,10);ctx.fill();ctx.fillStyle=z.hit>0?"#d9fff0":"#91ad8d";ctx.beginPath();ctx.arc(0,-28,24,0,TAU);ctx.fill();ctx.fillStyle="#eef1d5";ctx.beginPath();ctx.arc(-8,-32,5,0,TAU);ctx.arc(9,-30,5,0,TAU);ctx.fill();ctx.fillStyle="#27372e";ctx.beginPath();ctx.arc(-7,-31,2,0,TAU);ctx.arc(10,-29,2,0,TAU);ctx.fill();if(z.kind==="cone"){ctx.fillStyle="#e99d3e";ctx.beginPath();ctx.moveTo(-20,-48);ctx.lineTo(0,-83);ctx.lineTo(22,-47);ctx.closePath();ctx.fill();}if(z.kind==="bucket"){ctx.fillStyle="#aeb9b7";roundRect(-23,-67,46,34,6);ctx.fill();ctx.strokeStyle="#697877";ctx.lineWidth=3;ctx.stroke();}if(z.kind==="runner"){ctx.fillStyle="#e65555";ctx.fillRect(-23,-6,46,12);}if(z.kind==="paper"){ctx.fillStyle="#ece5ce";ctx.rotate(-.08);ctx.fillRect(-31,-4,55,31);ctx.fillStyle="#7d6a54";ctx.fillRect(-22,4,35,3);ctx.fillRect(-22,12,28,3);}if(z.kind==="shield"){ctx.fillStyle="#70908e";roundRect(-36,-10,30,58,6);ctx.fill();ctx.strokeStyle="#b7d0cb";ctx.lineWidth=3;ctx.stroke();}if(z.kind==="healer"){ctx.fillStyle="#e9eee8";roundRect(-25,-62,50,18,5);ctx.fill();ctx.fillStyle="#69b86f";ctx.fillRect(-4,-60,8,14);ctx.fillRect(-9,-55,18,6);}if(z.kind==="football"){ctx.fillStyle="#a83f45";roundRect(-27,-13,54,44,9);ctx.fill();ctx.fillStyle="#dfd8c7";ctx.fillRect(-5,-12,10,43);ctx.beginPath();ctx.arc(0,-51,24,Math.PI,TAU);ctx.fill();}if(z.kind==="balloon"){ctx.strokeStyle="#dfc3e8";ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(18,-42);ctx.lineTo(29,-89);ctx.stroke();ctx.fillStyle="#d69adf";ctx.beginPath();ctx.ellipse(30,-105,21,27,0,0,TAU);ctx.fill();}if(z.kind==="miner"){ctx.fillStyle="#d7b54a";ctx.beginPath();ctx.arc(0,-45,25,Math.PI,TAU);ctx.fill();ctx.strokeStyle="#6e5938";ctx.lineWidth=5;ctx.beginPath();ctx.moveTo(-28,4);ctx.lineTo(28,-35);ctx.stroke();}if(z.kind==="dancer"){ctx.fillStyle="#9b5ba4";ctx.fillRect(-26,-5,52,11);ctx.fillStyle="#e5d4e8";ctx.beginPath();ctx.moveTo(-24,21);ctx.lineTo(0,40);ctx.lineTo(24,21);ctx.fill();}if(z.kind==="imp"){ctx.scale(.72,.72);ctx.fillStyle="#bd6b4a";ctx.beginPath();ctx.arc(0,-60,13,0,TAU);ctx.fill();}if(z.kind==="ice"){ctx.fillStyle="#a9e3ee";ctx.beginPath();ctx.moveTo(-25,-50);ctx.lineTo(-10,-72);ctx.lineTo(0,-51);ctx.lineTo(14,-75);ctx.lineTo(25,-48);ctx.fill();}if(z.kind==="giant"){ctx.fillStyle="#574f45";roundRect(-32,-15,64,18,5);ctx.fill();ctx.strokeStyle="#8a7154";ctx.lineWidth=7;ctx.beginPath();ctx.moveTo(23,-5);ctx.lineTo(45,29);ctx.stroke();}if(z.burn>0){ctx.fillStyle="#ff7a45";ctx.beginPath();ctx.moveTo(-5,-50);ctx.quadraticCurveTo(5,-72,12,-48);ctx.fill();}if(z.stun>0){ctx.strokeStyle="#ffe66e";ctx.lineWidth=3;ctx.beginPath();ctx.arc(0,-60,18,0,TAU);ctx.stroke();}ctx.restore();drawEnemyHp(z);}
   function drawZombie(z){
-    const vaultLift=z.vaultAnim>0?Math.sin((1-z.vaultAnim/.72)*Math.PI)*72:0,airLift=z.air&&z.grounded<=0?18+Math.sin(state.time*4+z.id)*3:0,walk=Math.sin(z.step)*2,status=[z.burn>0?"燃烧":"",z.poison>0?"中毒":"",z.stun>0?"眩晕":"",z.slow>0?"减速":"",z.metalStripped?"破甲":""].filter(Boolean).join(" · ");
-    drawTextEntity(ZOMBIE_TEXT[z.kind]||"我是僵尸",z.x,z.y-vaultLift-airLift+walk,z.hit>0?"#ffffff":z.color,1,status,ZOMBIE_DEFS[z.kind].giant?94:76);drawEnemyHp(z);
+    const vaultLift=z.vaultAnim>0?Math.sin((1-z.vaultAnim/.72)*Math.PI)*72:0,airLift=z.air&&z.grounded<=0?18+Math.sin(state.time*4+z.id)*3:0,walk=Math.sin(z.step)*2,status=[z.charmed?"已魅惑":"",z.submerged?"潜水":"",z.burn>0?"燃烧":"",z.poison>0?"中毒":"",z.stun>0?"眩晕":"",z.slow>0?"减速":"",z.metalStripped?"破甲":""].filter(Boolean).join(" · ");
+    drawTextEntity(ZOMBIE_TEXT[z.kind]||"我是僵尸",z.x,z.y-vaultLift-airLift+walk,z.hit>0?"#ffffff":z.charmed?"#ef8bd8":z.color,1,status,ZOMBIE_DEFS[z.kind].giant?94:76);drawEnemyHp(z);
   }
   function drawEnemyHp(z){ctx.fillStyle="rgba(0,0,0,.35)";roundRect(z.x-24,z.y-67,48,5,3);ctx.fill();ctx.fillStyle="#e56b62";roundRect(z.x-24,z.y-67,48*Math.max(0,z.hp/z.maxHp),5,3);ctx.fill();}
   function drawZombies(){for(const z of state.zombies)if(z.alive)drawZombie(z);}
@@ -579,8 +656,9 @@
   const almanacGrid=document.getElementById("almanacGrid"),almanacSearch=document.getElementById("almanacSearch"),almanacCount=document.getElementById("almanacCount");
   let almanacFilter="all";
   const escapeText=value=>String(value??"").replace(/[&<>"']/g,char=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"})[char]);
+  const BASE_MECHANICS={potato:"埋地1.4秒后出土，只有僵尸踩入本格才爆炸。",hypno:"被僵尸啃咬时自身消失，并使该僵尸掉头为植物作战。",scaredy:"周围九宫格出现僵尸时害怕躲藏并停止攻击。",squash:"僵尸进入近身范围后跃起重压目标，攻击后自身消失。",kelp:"潜伏水下，首个靠近的地面僵尸会被拖入水下秒杀，随后自身消失。",cattail:"全场索敌并优先攻击空中僵尸，发射会追踪目标的尖刺。",umbrella:"保护周围九宫格植物，大幅削弱投篮车投射并弹开蹦极僵尸。",spikeweed:"持续伤害踩到本格的僵尸，接触载具时刺破载具并消失。",spikerock:"持续伤害本格僵尸，可多次承受并刺破载具。"};
   const almanacPlants=[
-    ...TYPES.map(id=>{const d=Core.PLANTS[id];return{kind:"base",id,name:d.name,color:d.color,sigil:CARD_SIGILS[id]||"●",available:true,recipe:"基础植物",hp:d.hp,damage:d.damage||0,interval:d.interval||0,description:`阳光消耗：${d.cost}；冷却：${d.cooldown}秒；类型：${Core.geneName(d.gene)}`} }),
+    ...TYPES.map(id=>{const d=Core.PLANTS[id];return{kind:"base",id,name:d.name,color:d.color,sigil:CARD_SIGILS[id]||"●",available:true,recipe:"基础植物",hp:d.hp,damage:d.damage||0,interval:d.interval||0,description:`阳光消耗：${d.cost}；冷却：${d.cooldown}秒；类型：${Core.geneName(d.gene)}${BASE_MECHANICS[id]?`；${BASE_MECHANICS[id]}`:""}`} }),
     ...Object.values(Core.FUSIONS).map((d,index)=>({kind:"fusion",ultimate:Boolean(d.abilities?.ultimate),id:d.id,name:d.name,color:d.color,sigil:d.abilities?.ultimate?"★":["✦","◆","✹","⬢","●","◉"][index%6],available:Boolean(d.available),recipe:d.recipe||d.materials.join(" + "),hp:d.hp,damage:d.damage||0,interval:d.interval||0,description:d.description}))
   ];
   function almanacCard(item){
@@ -597,7 +675,8 @@
   almanacSearch.addEventListener("input",renderAlmanac);
   const zombieAlmanacGrid=document.getElementById("zombieAlmanacGrid"),zombieAlmanacSearch=document.getElementById("zombieAlmanacSearch"),zombieAlmanacCount=document.getElementById("zombieAlmanacCount");
   let zombieAlmanacFilter="all";
-  const zombieAlmanacEntries=Object.entries(ZOMBIE_DEFS).map(([id,def])=>({id,...def,...ZOMBIE_ALMANAC[id]}));
+  const ZOMBIE_MECHANICS_OVERRIDE={zamboni:"登场时高速冲刺并逐渐减速；接触植物会直接碾压，地刺能够刺破载具。",snorkel:"潜水接近时不会被平射子弹命中，靠近植物后浮出水面啃咬。",catapult:"远距离投篮攻击九宫格范围；弹药攻击可被叶子保护伞削弱，接触植物后会碾压。",bungee:"从空中切入并偷走落点附近植物；叶子保护伞可以将其弹开。",gargantuar:"蓄力砸击植物，生命降至一半时向防线投掷一只小鬼。",gigaGargantuar:"强化巨人，砸击伤害更高，生命降至一半时投掷小鬼。"};
+  const zombieAlmanacEntries=Object.entries(ZOMBIE_DEFS).map(([id,def])=>({id,...def,...ZOMBIE_ALMANAC[id],ability:ZOMBIE_MECHANICS_OVERRIDE[id]||ZOMBIE_ALMANAC[id].ability}));
   function zombieSpeedLabel(speed){return speed>=28?"极快":speed>=23?"快速":speed>=17?"普通":"缓慢";}
   function zombieAlmanacCard(item){
     const badge=item.air?"空中":item.metal?"重甲":item.tags.includes("special")?"特殊":"普通";

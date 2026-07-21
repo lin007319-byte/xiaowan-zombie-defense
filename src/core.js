@@ -18,7 +18,7 @@
     puff: { id: "puff", name: "小喷菇", short: "小喷菇", cost: 0, cooldown: 4, body: "shooter", gene: "pierce", hp: 300, damage: 12, interval: 1.05, color: "#b58ed2" },
     sunshroom: { id: "sunshroom", name: "阳光菇", short: "阳光菇", cost: 25, cooldown: 5, body: "producer", gene: "producer", hp: 300, interval: 8.5, color: "#f0c95d" },
     fume: { id: "fume", name: "大蘑菇", short: "大蘑菇", cost: 75, cooldown: 5, body: "shooter", gene: "pierce", hp: 300, damage: 24, interval: 1.45, color: "#9b74c5" },
-    hypno: { id: "hypno", name: "魅惑菇", short: "魅惑菇", cost: 75, cooldown: 10, body: "guard", gene: "weaken", hp: 900, color: "#e07bba" },
+    hypno: { id: "hypno", name: "魅惑菇", short: "魅惑菇", cost: 75, cooldown: 10, body: "guard", gene: "weaken", hp: 300, color: "#e07bba" },
     iceShroom: { id: "iceShroom", name: "寒冰菇", short: "寒冰菇", cost: 125, cooldown: 18, body: "burst", gene: "deepfreeze", hp: 320, damage: 60, interval: .9, color: "#83ddf4" },
     doom: { id: "doom", name: "毁灭菇", short: "毁灭菇", cost: 200, cooldown: 20, body: "burst", gene: "nova", hp: 320, damage: 1380, interval: 1.15, color: "#6f45d8" },
     lilypad: { id: "lilypad", name: "荷叶", short: "荷叶", cost: 25, cooldown: 4, body: "guard", gene: "armor", hp: 300, color: "#66b96e" },
